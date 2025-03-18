@@ -63,7 +63,7 @@ The model is flexible to be trained with different hyper-parameter setting. The 
 ```num_layers``` : Number of GCN-Omics layers <br>
 ```batch_size``` : Batch size for the input data <br>
 ```k``` : Weight for the intra-omics data (should be within the range [0, 1]) <br>
-```epochs``` : Number of layers to train the model end-to-end <br>
+```epochs``` : Number of layers to train the model <br>
 ```lr``` : Learning rate <br>
 ```hidden_dim``` : Hidden representation dimension <br>
 ```adj_thresh``` : Adjacency matrix threshold for the intra-omics graph (should be within the range [0, 1]) <br>
