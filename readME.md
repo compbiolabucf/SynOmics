@@ -34,9 +34,9 @@ The model is flexible to be trained with different hyper-parameter setting. The 
 ```epochs``` : Number of layers to train the model end-to-end <br>
 ```lr``` : Learning rate <br>
 ```hidden_dim``` : Hidden representation dimension <br>
-```adj_thresh``` : Adjacency matrix threshold for the intra-omics graph <br>
-```alpha``` : Weight for the reconstruction loss (it should be within the range [0, 1]) <br>
-```bias``` : Enable training bias <br>
+```adj_thresh``` : Adjacency matrix threshold for the intra-omics graph (should be within the range [0, 1]) <br>
+```alpha``` : Weight for the reconstruction loss (should be within the range [0, 1]) <br>
+```bias``` : Enable training with bias (Trur or False) <br>
 ```split``` : Number of split to train on <br>
 ```data_path``` : Input data directory <br>
 ```save_path``` : Directory to store the results <br>
@@ -44,7 +44,7 @@ The model is flexible to be trained with different hyper-parameter setting. The 
 
 To train with different hyper-parameter setting, train using
 ```bash
-python train.py --<hyper-parameter>=<value>
+python train.py --<hyper-parameter1>=<value> --<hyper-parameter2>=<value> ...
 ```
 
 ### Weighted Message Passing
@@ -62,13 +62,13 @@ The model is flexible to be trained with different hyper-parameter setting. The 
 
 ```num_layers``` : Number of GCN-Omics layers <br>
 ```batch_size``` : Batch size for the input data <br>
-```k``` : Weight for the intra-omics data (it should be within the range [0, 1]) <br>
+```k``` : Weight for the intra-omics data (should be within the range [0, 1]) <br>
 ```epochs``` : Number of layers to train the model end-to-end <br>
 ```lr``` : Learning rate <br>
 ```hidden_dim``` : Hidden representation dimension <br>
-```adj_thresh``` : Adjacency matrix threshold for the intra-omics graph <br>
-```alpha``` : Weight for the reconstruction loss (it should be within the range [0, 1]) <br>
-```bias``` : Enable training bias <br>
+```adj_thresh``` : Adjacency matrix threshold for the intra-omics graph (should be within the range [0, 1]) <br>
+```alpha``` : Weight for the reconstruction loss (should be within the range [0, 1]) <br>
+```bias``` : Enable training with bias (Trur or False) <br>
 ```split``` : Number of split to train on <br>
 ```data_path``` : Input data directory <br>
 ```save_path``` : Directory to store the results <br>
@@ -76,5 +76,5 @@ The model is flexible to be trained with different hyper-parameter setting. The 
 
 To train with different hyper-parameter setting, train using
 ```bash
-python train.py --<hyper-parameter>=<value>
+python train.py --<hyper-parameter1>=<value> --<hyper-parameter2>=<value> ...
 ```
