@@ -22,22 +22,22 @@ Then run the train file, using
 
 The model is flexible to be trained with different hyper-parameter setting. The hyper-parameters are:
 
-num_layers : Number of GCN-Omics layer
-batch_size : Batch Size for the input data
-gcn_epochs : Number of epochs for the pretraining of the GCN-Omics layers
-epochs : Number of layers to train the model end-to-end
-lr : Learning Rate
-hidden_dim : Hidden representation dimension
-adj_thresh : Adjacency matrix threshold for the intra-omics graph
-alpha : Weight for the Alignment loss (it should be within the range [0, 1])
-bias : Enable training bias
-split : Number of split to train on
-data_path : Input data directory
-save_path : Directory to store the results
-save_filename : Name of the csv file to store the results
+```num_layers``` : Number of GCN-Omics layer
+```batch_size``` : Batch Size for the input data
+```gcn_epochs``` : Number of epochs for the pretraining of the GCN-Omics layers
+```epochs``` : Number of layers to train the model end-to-end
+```lr``` : Learning Rate
+```hidden_dim``` : Hidden representation dimension
+```adj_thresh``` : Adjacency matrix threshold for the intra-omics graph
+```alpha``` : Weight for the Alignment loss (it should be within the range [0, 1])
+```bias``` : Enable training bias
+```split``` : Number of split to train on
+```data_path``` : Input data directory
+```save_path``` : Directory to store the results
+```save_filename``` : Name of the csv file to store the results
 
 To train with different hyper-parameter setting, train using
->python train.py --<hyper-parameter>=<value>
+>`python train.py --<hyper-parameter>=<value>`
 
 #### Weighted Message Passing
 To run the model with Dual Alignment module, go to the directory "WMP".
@@ -48,19 +48,19 @@ Then run the train file, using
 
 The model is flexible to be trained with different hyper-parameter setting. The hyper-parameters are:
 
-num_layers : Number of GCN-Omics layer
-batch_size : Batch Size for the input data
-k : Weight for the intra-omics data (it should be within the range [0, 1])
-epochs : Number of layers to train the model end-to-end
-lr : Learning Rate
-hidden_dim : Hidden representation dimension
-adj_thresh : Adjacency matrix threshold for the intra-omics graph
-alpha : Weight for the Alignment loss (it should be within the range [0, 1])
-bias : Enable training bias
-split : Number of split to train on
-data_path : Input data directory
-save_path : Directory to store the results
-save_filename : Name of the csv file to store the results
+```num_layers``` : Number of GCN-Omics layer
+```batch_size``` : Batch Size for the input data
+```k``` : Weight for the intra-omics data (it should be within the range [0, 1])
+```epochs``` : Number of layers to train the model end-to-end
+```lr``` : Learning Rate
+```hidden_dim``` : Hidden representation dimension
+```adj_thresh``` : Adjacency matrix threshold for the intra-omics graph
+```alpha``` : Weight for the Alignment loss (it should be within the range [0, 1])
+```bias``` : Enable training bias
+```split``` : Number of split to train on
+```data_path``` : Input data directory
+```save_path``` : Directory to store the results
+```save_filename``` : Name of the csv file to store the results
 
 To train with different hyper-parameter setting, train using
 >`python train.py --<hyper-parameter>=<value>`
