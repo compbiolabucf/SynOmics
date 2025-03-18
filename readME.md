@@ -31,7 +31,7 @@ Then run the train file, using
 python train.py
 ```
 
-The model is flexible to be trained with different hyper-parameter setting. The hyper-parameters are:
+The model is flexible to be trained with different hyper-parameter settings. The hyper-parameters are:
 
 ```num_layers``` : Number of GCN-Omics layers <br>
 ```batch_size``` : Batch size for the input data <br>
@@ -47,7 +47,7 @@ The model is flexible to be trained with different hyper-parameter setting. The 
 ```save_path``` : Directory to store the results <br>
 ```save_filename``` : Name of the csv file to store the results <br>
 
-To train with different hyper-parameter setting, train using
+To train with different hyper-parameter settings, train using
 ```bash
 python train.py --<hyper-parameter1>=<value> --<hyper-parameter2>=<value> ...
 ```
@@ -63,7 +63,7 @@ Then run the train file, using
 python train.py
 ```
 
-The model is flexible to be trained with different hyper-parameter setting. The hyper-parameters are:
+The model is flexible to be trained with different hyper-parameter settings. The hyper-parameters are:
 
 ```num_layers``` : Number of GCN-Omics layers <br>
 ```batch_size``` : Batch size for the input data <br>
@@ -78,7 +78,7 @@ The model is flexible to be trained with different hyper-parameter setting. The 
 ```save_path``` : Directory to store the results <br>
 ```save_filename``` : Name of the csv file to store the results <br>
 
-To train with different hyper-parameter setting, train using
+To train with different hyper-parameter settings, train using
 ```bash
 python train.py --<hyper-parameter1>=<value> --<hyper-parameter2>=<value> ...
 ```
