@@ -17,7 +17,8 @@ The model primarily uses two omics data, Gene Expression and miRNA Expression. T
 1. Separate train, validation and test files for both of the omics. The files are organized into *(sample x value)* manner. <br>
 2. Separate label files for train, validation and test data. The labels are 0-indexed and structured in a 1-D array. <br>
 3. The bipartite graph stored in "bip.csv", which is structured into *(omic1 features x omic2 features)* manner. <br>
-To run successfully, the number of samples in each train, validation or test data should be same.  *(The "1" in the data files denote split number, since we split the data 100 times for training. Here, we give one sample)*
+
+To run successfully, the number of samples in each train, validation or test data should be same.  *(The "1" in the data files denote split number, as we split the data 100 times for training. Here, we give one sample)*
 
 ### Dual Alignment
 To run the model with Dual Alignment module, go to the directory "DA".
