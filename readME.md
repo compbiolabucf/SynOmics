@@ -63,4 +63,4 @@ save_path : Directory to store the results
 save_filename : Name of the csv file to store the results
 
 To train with different hyper-parameter setting, train using
->python train.py --<hyper-parameter>=<value>
+>`python train.py --<hyper-parameter>=<value>`
