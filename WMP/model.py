@@ -6,14 +6,14 @@ from utils import *
 from layers import GCNCustomLayer, MoGCNLayer
 
 class MoGCN(nn.Module):
-    def __init__(self, input_features_u, input_features_v, num_layers=2, hidden_dim=64, bias=False, k=0.5, mp='add', nc=1):
+    def __init__(self, input_features_u, input_features_v, num_layers=2, hidden_dim=64, bias=False, k=0.5, nc=1):
         super(MoGCN, self).__init__()
 
         self.layers = nn.ModuleList()
         self.nc = nc
         
         for i in range(num_layers):
-            self.layers.append(MoGCNLayer(input_features_u, input_features_v, bias, k, mp))
+            self.layers.append(MoGCNLayer(input_features_u, input_features_v, bias, k))
 
         self.fc = nn.Linear(input_features_u + input_features_v, hidden_dim)
         self.fc2 = nn.Linear(hidden_dim, nc)     # for binary classification

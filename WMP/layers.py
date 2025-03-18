@@ -32,12 +32,11 @@ class GCNCustomLayer(nn.Module):
     
 
 class MoGCNLayer(nn.Module):
-    def __init__(self, in_features_u, in_features_v, bias=False, k=0.5, mp='add'):
+    def __init__(self, in_features_u, in_features_v, bias=False, k=0.5):
         super(MoGCNLayer, self).__init__()
         
         self.in_features_u = in_features_u
         self.in_features_v = in_features_v
-        self.mp = mp
         self.k = k
 
         self.GCN_u = GCNCustomLayer(in_features_u, bias)
@@ -65,28 +64,9 @@ class MoGCNLayer(nn.Module):
         H_uv = torch.matmul(adjacency_matrix_uv.t(), X_u)   # U -> V
         H_uv = torch.matmul(W_v, H_uv)                      # mxd
 
-        if self.mp == 'add':
-            X_u = H_u + H_vu
-            X_v = H_v + H_uv
-        elif self.mp == 'concat':
-            d = X_u.size(1)
-            X_u = torch.cat((H_u, H_vu), dim=1)     # dim = nx2d
-            X_v = torch.cat((H_v, H_uv), dim=1)     # dim = mx2d
-            X_u = nn.Linear(2 * d, d)(X_u)        # dim = nxd
-            X_v = nn.Linear(2 * d, d)(X_v)        # dim = mxd
-        elif self.mp == 'mul':
-            X_u = H_u * H_vu
-            X_v = H_v * H_uv
-        elif self.mp == 'mean':
-            X_u = (H_u + H_vu) / 2
-            X_v = (H_v + H_uv) / 2
-        elif self.mp == 'weighted':
-            X_u = self.k * H_u + (1 - self.k) * H_vu
-            X_v = self.k * H_v + (1 - self.k) * H_uv
-        else:
-            # print("No message passing")
-            pass
-
+        X_u = self.k * H_u + (1 - self.k) * H_vu
+        X_v = self.k * H_v + (1 - self.k) * H_uv
+        
         X_u = X_u.t()
         X_u = self.bn_u(X_u)
         X_u = X_u.t()

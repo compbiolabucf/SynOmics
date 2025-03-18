@@ -21,7 +21,6 @@ if __name__ == "__main__":
     parser.add_argument('--adj_thresh', type=float, default=0.5, help='Adjacency threshold')
     parser.add_argument('--bias', type=bool, default=False, help='Bias')
     parser.add_argument('--k', type=float, default=0.5, help='Message Passing Weight')
-    parser.add_argument('--mp', type=str, default='add', help='Message Passing')
     parser.add_argument('--split', type=int, default=1, help='Number of Split')
     parser.add_argument('--data_path', type=str, default='../sample_data/', help='Data Path')
     parser.add_argument('--save_path', type=str, default='./', help='Save Path')
@@ -35,7 +34,6 @@ if __name__ == "__main__":
     hidden_dim = args.hidden_dim
     adj_thresh = args.adj_thresh
     bias = args.bias
-    mp = args.mp
     k = args.k
     split = args.split
     data_path = args.data_path
@@ -167,7 +165,7 @@ if __name__ == "__main__":
     d = x_u.size(1)
 
     # Initialize the model
-    model = MoGCN(input_features_u=n, input_features_v=m, num_layers=num_layers, hidden_dim=hidden_dim, bias=bias, k=k, mp=mp).to(device)
+    model = MoGCN(input_features_u=n, input_features_v=m, num_layers=num_layers, hidden_dim=hidden_dim, bias=bias, k=k).to(device)
 
     # training the model end to end
     data = Data(x_u=x_u, x_v=x_v, y=y_u).to(device)
