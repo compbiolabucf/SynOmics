@@ -22,14 +22,14 @@ Then run the train file, using
 
 The model is flexible to be trained with different hyper-parameter setting. The hyper-parameters are:
 
-```num_layers``` : Number of GCN-Omics layer <br>
-```batch_size``` : Batch Size for the input data <br>
+```num_layers``` : Number of GCN-Omics layers <br>
+```batch_size``` : Batch size for the input data <br>
 ```gcn_epochs``` : Number of epochs for the pretraining of the GCN-Omics layers <br>
 ```epochs``` : Number of layers to train the model end-to-end <br>
-```lr``` : Learning Rate <br>
+```lr``` : Learning rate <br>
 ```hidden_dim``` : Hidden representation dimension <br>
 ```adj_thresh``` : Adjacency matrix threshold for the intra-omics graph <br>
-```alpha``` : Weight for the Alignment loss (it should be within the range [0, 1]) <br>
+```alpha``` : Weight for the alignment loss (it should be within the range [0, 1]) <br>
 ```bias``` : Enable training bias <br>
 ```split``` : Number of split to train on <br>
 ```data_path``` : Input data directory <br>
@@ -48,11 +48,11 @@ Then run the train file, using
 
 The model is flexible to be trained with different hyper-parameter setting. The hyper-parameters are:
 
-```num_layers``` : Number of GCN-Omics layer <br>
-```batch_size``` : Batch Size for the input data <br>
+```num_layers``` : Number of GCN-Omics layers <br>
+```batch_size``` : Batch size for the input data <br>
 ```k``` : Weight for the intra-omics data (it should be within the range [0, 1]) <br>
 ```epochs``` : Number of layers to train the model end-to-end <br>
-```lr``` : Learning Rate <br>
+```lr``` : Learning rate <br>
 ```hidden_dim``` : Hidden representation dimension <br>
 ```adj_thresh``` : Adjacency matrix threshold for the intra-omics graph <br>
 ```alpha``` : Weight for the Alignment loss (it should be within the range [0, 1]) <br>
