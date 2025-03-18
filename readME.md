@@ -11,7 +11,7 @@ First, install the dependencies using the requirements.txt file. It is recommend
 > pip install -r requirements.txt
 
 ### Input Data
-The model primarily uses two omics data, Gene Expression and miRNA Expression. There is a set of sample data in the "sample_data" directory. The directory has separate train, validation and test files for both of the omics. The files are organized into *(sample x value)* manner. There are also separate label files for train, validation and test data. The labels are 0-indexed and structured in a 1-D array. To run successfully, the number of samples in each train, validation or test data should be same. The bipartite graph is stored in "bip.csv", which is structured into *(omic1 features x omic2 features)*. *(The "1" in the data files denote split number, since we split the data 100 times for training. Here, we give one sample)*
+The model primarily uses two omics data, Gene Expression and miRNA Expression. There is a set of sample data in the "sample_data" directory. The directory has separate train, validation and test files for both of the omics. The files are organized into *(sample x value)* manner. There are also separate label files for train, validation and test data. The labels are 0-indexed and structured in a 1-D array. To run successfully, the number of samples in each train, validation or test data should be same. The bipartite graph is stored in "bip.csv", which is structured into *(omic1 features x omic2 features)* manner. *(The "1" in the data files denote split number, since we split the data 100 times for training. Here, we give one sample)*
 
 ### Dual Alignment
 To run the model with Dual Alignment module, go to the directory "DA".
