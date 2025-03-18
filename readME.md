@@ -3,7 +3,7 @@
 This repository contains the code for GCN-Omics, a multi-omics integration model that utilizes Graph Convolution Networks for the downstream task of disease classification. The model uses separate and parallel GCNs to learn the intra-omics and inter-omics interactions.
 
 ## Overall Framework
-<img src="GCN-Omics/Arch.jpg">
+<img src="GCN-Omics/Arch.jpg" width="450" height="450">
 
 ## How To Run
 
