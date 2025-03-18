@@ -15,10 +15,10 @@ The model primarily uses two omics data, Gene Expression and miRNA Expression. T
 
 ### Dual Alignment
 To run the model with Dual Alignment module, go to the directory "DA".
-> cd DA
+>`cd DA`
 
 Then run the train file, using
->python train.py
+>`python train.py`
 
 The model is flexible to be trained with different hyper-parameter setting. The hyper-parameters are:
 
@@ -41,10 +41,10 @@ To train with different hyper-parameter setting, train using
 
 ### Weighted Message Passing
 To run the model with Dual Alignment module, go to the directory "WMP".
->cd WMP
+>`cd WMP`
 
 Then run the train file, using
->python train.py
+>`python train.py`
 
 The model is flexible to be trained with different hyper-parameter setting. The hyper-parameters are:
 
