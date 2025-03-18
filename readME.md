@@ -2,18 +2,18 @@
 
 This repository contains the code for GCN-Omics, a multi-omics integration model that utilizes Graph Convolution Networks for the downstream task of disease classification. The model uses separate and parallel GCNs to learn the intra-omics and inter-omics interactions.
 
-### Overall Framework
+## Overall Framework
 <img src="GCN-Omics/Arch.jpg">
 
-### How To Run
+## How To Run
 
 First, install the dependencies using the requirements.txt file. It is recommended to create a python virtual environment first.
 > pip install -r requirements.txt
 
-#### Input Data
+### Input Data
 The model primarily uses two omics data, Gene Expression and miRNA Expression. There is a set of sample data in the "sample_data" directory. The directory has separate train, validation and test files for both of the omics. The files are organized into *sample x value* manner. There are also separate label files for train, validation and test data. The labels are 0-indexed and structured in a 1-D array. To run successfully, the number of samples in each train, validation or test data should be same. *(The "1" in the data files denote split number, since we split the data 100 times for training. Here, we give one sample)*
 
-#### Dual Alignment
+### Dual Alignment
 To run the model with Dual Alignment module, go to the directory "DA".
 > cd DA
 
@@ -39,7 +39,7 @@ The model is flexible to be trained with different hyper-parameter setting. The 
 To train with different hyper-parameter setting, train using
 >`python train.py --<hyper-parameter>=<value>`
 
-#### Weighted Message Passing
+### Weighted Message Passing
 To run the model with Dual Alignment module, go to the directory "WMP".
 >cd WMP
 
