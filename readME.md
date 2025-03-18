@@ -35,7 +35,7 @@ The model is flexible to be trained with different hyper-parameter setting. The 
 ```lr``` : Learning rate <br>
 ```hidden_dim``` : Hidden representation dimension <br>
 ```adj_thresh``` : Adjacency matrix threshold for the intra-omics graph <br>
-```alpha``` : Weight for the alignment loss (it should be within the range [0, 1]) <br>
+```alpha``` : Weight for the reconstruction loss (it should be within the range [0, 1]) <br>
 ```bias``` : Enable training bias <br>
 ```split``` : Number of split to train on <br>
 ```data_path``` : Input data directory <br>
@@ -67,7 +67,7 @@ The model is flexible to be trained with different hyper-parameter setting. The 
 ```lr``` : Learning rate <br>
 ```hidden_dim``` : Hidden representation dimension <br>
 ```adj_thresh``` : Adjacency matrix threshold for the intra-omics graph <br>
-```alpha``` : Weight for the Alignment loss (it should be within the range [0, 1]) <br>
+```alpha``` : Weight for the reconstruction loss (it should be within the range [0, 1]) <br>
 ```bias``` : Enable training bias <br>
 ```split``` : Number of split to train on <br>
 ```data_path``` : Input data directory <br>
