@@ -39,7 +39,7 @@ The model is flexible to be trained with different hyper-parameter settings. The
 ```epochs``` : Number of layers to train the model end-to-end <br>
 ```lr``` : Learning rate <br>
 ```hidden_dim``` : Hidden representation dimension <br>
-```adj_thresh``` : Adjacency matrix threshold for the intra-omics graph (should be within the range [0, 1]) <br>
+```adj_thresh``` : Adjacency matrix threshold for the intra-omics graph (should be within the range [0, 1]. A higher value makes the graph sparser) <br>
 ```alpha``` : Weight for the reconstruction loss (should be within the range [0, 1]) <br>
 ```bias``` : Enable training with bias (Trur or False) <br>
 ```split``` : Number of split to train on <br>
@@ -71,7 +71,7 @@ The model is flexible to be trained with different hyper-parameter settings. The
 ```epochs``` : Number of layers to train the model <br>
 ```lr``` : Learning rate <br>
 ```hidden_dim``` : Hidden representation dimension <br>
-```adj_thresh``` : Adjacency matrix threshold for the intra-omics graph (should be within the range [0, 1]) <br>
+```adj_thresh``` : Adjacency matrix threshold for the intra-omics graph (should be within the range [0, 1]. A higher value makes the graph sparser) <br>
 ```bias``` : Enable training with bias (Trur or False) <br>
 ```split``` : Number of split to train on <br>
 ```data_path``` : Input data directory <br>
