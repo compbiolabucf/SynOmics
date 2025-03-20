@@ -1,6 +1,5 @@
 import numpy as np
 import torch
-from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler, MinMaxScaler, RobustScaler, Normalizer
 from sklearn.metrics.pairwise import cosine_similarity
 import pickle
@@ -8,7 +7,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import pandas as pd
 import os
-import csv
+
 
 def get_scaler(scaler_name):
     if scaler_name == 'standard':
@@ -22,25 +21,21 @@ def get_scaler(scaler_name):
     else:
         raise ValueError("Invalid scaler name")
     
+
 def normalize(data, scaler_name='standard'):
     scaler = get_scaler(scaler_name)
     
-    # Move the tensor to CPU and convert to NumPy
     data_np = data.detach().cpu().numpy()
-    data_np = data_np.T  # Transpose for scaling
-    
-    # Normalize using the scaler
+    data_np = data_np.T 
     X_np = scaler.fit_transform(data_np)
-    X_np = X_np.T  # Transpose back
-    
-    # Convert back to a PyTorch tensor and move to GPU if needed
+    X_np = X_np.T 
     X = torch.tensor(X_np, dtype=torch.float32)
 
-    # Move back to GPU if the original data was on GPU
     if data.is_cuda:
         X = X.to(data.device)
 
     return X
+
 
 def get_adjacency_matrix(data, threshold=0.5, metric='cosine'):
     """
@@ -61,6 +56,7 @@ def get_adjacency_matrix(data, threshold=0.5, metric='cosine'):
     
     return A
 
+
 def get_adjacency_matrix_bipartite(A_u, A_v):
     """
     Create a bipartite adjacency matrix from the data
@@ -78,6 +74,7 @@ def get_adjacency_matrix_bipartite(A_u, A_v):
 
     return A
 
+
 def normalized_adjacency(adjacency_matrix):
         # Add self-loops to the adjacency matrix
         adjacency_matrix = adjacency_matrix + torch.eye(adjacency_matrix.size(0), device=adjacency_matrix.device)
@@ -90,26 +87,24 @@ def normalized_adjacency(adjacency_matrix):
         degree_matrix_inv_sqrt[torch.isinf(degree_matrix_inv_sqrt)] = 0. # handle division by zero
 
         # Normalize adjacency matrix
-        normalized_adjacency = torch.matmul(torch.matmul(degree_matrix_inv_sqrt, adjacency_matrix), degree_matrix_inv_sqrt)
+        norm_adj = torch.matmul(torch.matmul(degree_matrix_inv_sqrt, adjacency_matrix), degree_matrix_inv_sqrt)
 
-        return normalized_adjacency
+        return norm_adj
+
 
 def normalized_adjacency_bipartite(adjacency_matrix):
-    # create a square matrix of size n+m
     n = adjacency_matrix.size(0)
     m = adjacency_matrix.size(1)
     adjacency_matrix_bipartite = torch.zeros(n+m, n+m, device=adjacency_matrix.device)
     adjacency_matrix_bipartite[:n, n:] = adjacency_matrix
     adjacency_matrix_bipartite[n:, :n] = adjacency_matrix.t()
 
-    # Normalize adjacency matrix
     B = normalized_adjacency(adjacency_matrix_bipartite)
-
-    # extract normalized adjacency matrices
     B_u = B[:n, n:]         # n x m
     B_v = B[n:, :n]         # m x n
 
     return B_u, B_v
+
 
 class FocalLoss(nn.Module):
     def __init__(self, gamma=2.0, alpha=0.25, reduction='mean'):
@@ -136,23 +131,17 @@ class FocalLoss(nn.Module):
             return F_loss
 
 def get_data_split(data_path, omics_name='gene_exp', split_no=1):
-    X_train = pickle.load(open(data_path + 'Splits/' + omics_name + '_train_' + str(split_no) +'.pkl', 'rb'))
-    y_train = pickle.load(open(data_path + 'Splits/y_train_' + str(split_no) + '.pkl', 'rb'))
+    X_train = pickle.load(open(data_path + "/" + omics_name + '_train_' + str(split_no) +'.pkl', 'rb'))
+    y_train = pickle.load(open(data_path + "/" + 'y_train_' + str(split_no) + '.pkl', 'rb'))
 
-    X_val = pickle.load(open(data_path + 'Splits/' + omics_name + '_val_' + str(split_no) + '.pkl', 'rb'))
-    y_val = pickle.load(open(data_path + 'Splits/y_val_' + str(split_no) + '.pkl', 'rb'))
+    X_val = pickle.load(open(data_path + "/" + omics_name + '_val_' + str(split_no) + '.pkl', 'rb'))
+    y_val = pickle.load(open(data_path + "/" + 'y_val_' + str(split_no) + '.pkl', 'rb'))
 
-    X_test = pickle.load(open(data_path + 'Splits/' + omics_name + '_test_' + str(split_no) + '.pkl', 'rb'))
-    y_test = pickle.load(open(data_path + 'Splits/y_test_' + str(split_no) + '.pkl', 'rb'))
+    X_test = pickle.load(open(data_path + "/" + omics_name + '_test_' + str(split_no) + '.pkl', 'rb'))
+    y_test = pickle.load(open(data_path + "/" + 'y_test_' + str(split_no) + '.pkl', 'rb'))
 
     return X_train, y_train, X_val, y_val, X_test, y_test
 
-def get_bip(data_path, bip_name='bip.csv'):
-    
-    data = pd.read_csv(data_path + bip_name)
-    data = data.drop(data.columns[0], axis=1)   # drop the data header
-    
-    return data.values
 
 def get_best_threshold(fpr, tpr, thresholds, method='Youden'):
     """
@@ -179,21 +168,13 @@ def get_best_threshold(fpr, tpr, thresholds, method='Youden'):
 
 
 def save_data(path, data, filename='results.csv', header=None):
-    # Define the CSV file name
     csv_file = path + filename
-
-    # Check if the file exists
     file_exists = os.path.isfile(csv_file)
 
-    # Open the CSV file in append mode (or create it if it doesn't exist)
     with open(csv_file, 'a', newline='') as file:
         writer = csv.writer(file)
-
-        # Write the header if the file is empty
         if not file_exists:
             writer.writerow(header)
-
-        # Write the data
         writer.writerow(data)
 
     print(f'Data written to {csv_file}.')

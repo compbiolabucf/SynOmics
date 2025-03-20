@@ -22,9 +22,7 @@ if __name__ == "__main__":
     parser.add_argument('--bias', type=bool, default=False, help='Bias')
     parser.add_argument('--k', type=float, default=0.5, help='Message Passing Weight')
     parser.add_argument('--split', type=int, default=1, help='Number of Split')
-    parser.add_argument('--data_path', type=str, default='../sample_data/', help='Data Path')
-    parser.add_argument('--save_path', type=str, default='./', help='Save Path')
-    parser.add_argument('--save_filename', type=str, default='results.csv', help='Save Filename')
+    parser.add_argument('--data_path', type=str, default='sample_data/', help='Data Path')
     args = parser.parse_args()
 
     num_layers = args.num_layers
@@ -37,8 +35,6 @@ if __name__ == "__main__":
     k = args.k
     split = args.split
     data_path = args.data_path
-    save_path = args.save_path
-    save_filename = args.save_filename
 
     # Check if GPU is available
     device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
@@ -145,7 +141,7 @@ if __name__ == "__main__":
     y_v_test = y_v_test.to(device)
 
     # bipartite adjacency matrix
-    bip = get_bip(data_path)
+    bip = pickle.load(open(data_path + '/bip_gene_exp_miRNA.pkl', 'rb'))
     bip = torch.tensor(bip, dtype=torch.float32)
     B_u, B_v = normalized_adjacency_bipartite(bip)  
     B_u = torch.tensor(B_u, dtype=torch.float32)
@@ -179,9 +175,9 @@ if __name__ == "__main__":
     model.train()
 
     # Variables for early stopping
-    best_val_loss = float('inf')  # Initialize to a large value
-    patience = 10  # Number of epochs to wait before stopping if no improvement
-    epochs_without_improvement = 0  # Counter for epochs without improvement
+    best_val_loss = float('inf')  
+    patience = 10  
+    epochs_without_improvement = 0  
 
     for epoch in range(epochs):
         for batch in loader:
@@ -198,14 +194,12 @@ if __name__ == "__main__":
                 out_val, _, _ = model(x_u_val, x_v_val, A_u, A_v, B_u)
                 val_loss = criterion(out_val, y_u_val)
 
-            # Early stopping condition: Check if validation loss has improved
             if val_loss < best_val_loss:
                 best_val_loss = val_loss
-                epochs_without_improvement = 0  # Reset the counter
+                epochs_without_improvement = 0
             else:
                 epochs_without_improvement += 1
 
-            # If no improvement for 'patience' epochs, break the training loop
             if epochs_without_improvement >= patience:
                 print(f"Early stopping at epoch {epoch} due to no improvement in validation loss.")
                 break
@@ -213,7 +207,6 @@ if __name__ == "__main__":
         if epoch % 10 == 0:
             print(f'Epoch {epoch}, Loss: {loss.item():.4f}', f'Val Loss: {val_loss.item():.4f}')
         
-        # Break the outer loop if early stopping condition is met
         if epochs_without_improvement >= patience:
             break
 
@@ -245,11 +238,11 @@ if __name__ == "__main__":
         print("MCC: ", mcc)
 
 
-    print("\nValidation set metrics...")
     del x_u
     del x_v
     del y_u
     del y_v
+    print("\nValidation set metrics...")
     model.eval()
     with torch.no_grad():
         x_u_val.to(device)
@@ -276,7 +269,7 @@ if __name__ == "__main__":
         print("AUPRC: ", val_auprc)
         print("MCC: ", val_mcc)
 
-    # Testing
+    
     del x_u_val
     del x_v_val
     del y_u_val
@@ -306,19 +299,3 @@ if __name__ == "__main__":
         print("ROC AUC: ", test_roc_auc)
         print("AUPRC: ", test_auprc)
         print("MCC: ", test_mcc)
-    
-    header = [
-        'num_layers', 'batch_size', 'lr', 'epochs', 'adj_thresh', 'hidden_dim', 'bias', 'mp', 'k', 'split_no',
-        'train_acc', 'train_F1', 'train_prec', 'train_recall', 'train_ROC_AUC', 'train_AUPRC', 'train_MCC',
-        'val_acc', 'val_F1', 'val_prec', 'val_recall', 'val_ROC_AUC', 'val_AUPRC', 'val_MCC',
-        'test_acc', 'test_F1', 'test_prec', 'test_recall', 'test_ROC_AUC', 'test_AUPRC', 'test_MCC'
-    ]
-
-    metrics = [
-        num_layers, batch_size, lr, epochs, adj_thresh, hidden_dim, bias, mp, k, split,
-        acc, f1, precision, recall, roc_auc, auprc, mcc,
-        val_acc, val_f1, val_precision, val_recall, val_roc_auc, val_auprc, val_mcc,
-        test_acc, test_f1, test_precision, test_recall, test_roc_auc, test_auprc, test_mcc
-    ]
-
-    save_data(save_path, metrics, filename=save_filename, header=header)

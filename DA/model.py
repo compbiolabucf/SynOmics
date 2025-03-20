@@ -28,7 +28,7 @@ class MoGCN(nn.Module):
         x = F.relu(x)
         x = self.fc2(x)
         
-        if nc > 2:
+        if self.nc > 2:
             softmax = nn.Softmax(dim=0)
             x = softmax(x) 
         else:

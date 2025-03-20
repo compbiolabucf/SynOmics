@@ -4,13 +4,9 @@ import torch.optim as optim
 from torch_geometric.data import Data, DataLoader
 from utils import *
 from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score, roc_curve, precision_recall_curve, auc, matthews_corrcoef
-from sklearn.metrics import confusion_matrix
 from sklearn.preprocessing import StandardScaler
 from model import MoGCN
 import argparse
-import os
-import matplotlib.pyplot as plt
-import seaborn as sns
 import pickle
 
 if __name__ == "__main__":
@@ -28,9 +24,7 @@ if __name__ == "__main__":
     parser.add_argument('--k1', type=float, default=0.3, help='Message Passing Weight k1')
     parser.add_argument('--k2', type=float, default=0.3, help='Message Passing Weight k2')
     parser.add_argument('--split', type=int, default=1, help='Number of Split')
-    parser.add_argument('--data_path', type=str, default='../sample_data/', help='Data Path')
-    parser.add_argument('--save_path', type=str, default='./', help='Save Path')
-    parser.add_argument('--save_filename', type=str, default='results.csv', help='Save Filename')
+    parser.add_argument('--data_path', type=str, default='sample_data', help='Data Path')
     args = parser.parse_args()
 
     num_layers = args.num_layers
@@ -41,13 +35,10 @@ if __name__ == "__main__":
     adj_thresh = args.adj_thresh
     adj_metric = args.adj_metric
     bias = args.bias
-    mp = args.mp
     k1 = args.k1
     k2 = args.k2
     split = args.split
     data_path = args.data_path
-    save_path = args.save_path
-    save_filename = args.save_filename
 
     # Check if GPU is available
     device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
@@ -206,19 +197,19 @@ if __name__ == "__main__":
     # ---------------------------------------------------------------------------------- #
 
     # bipartite adjacency matrix
-    bip = pickle.load(open(data_path + 'bip_gene_exp_miRNA.pkl', 'rb'))
+    bip = pickle.load(open(data_path + '/bip_gene_exp_miRNA.pkl', 'rb'))
     bip = torch.tensor(bip, dtype=torch.float32)
     B_uv, B_vu = normalized_adjacency_bipartite(bip)  
     B_uv = torch.tensor(B_uv, dtype=torch.float32)        
     B_vu = torch.tensor(B_vu, dtype=torch.float32)
 
-    bip = pickle.load(open(data_path + 'bip_miRNA_DNA_Meth.pkl', 'rb'))
+    bip = pickle.load(open(data_path + '/bip_miRNA_DNA_Meth.pkl', 'rb'))
     bip = torch.tensor(bip, dtype=torch.float32)
     B_vw, B_wv = normalized_adjacency_bipartite(bip)  
     B_vw = torch.tensor(B_vw, dtype=torch.float32)        
     B_wv = torch.tensor(B_wv, dtype=torch.float32)
 
-    bip = pickle.load(open(data_path + 'bip_DNA_Meth_gene_exp.pkl', 'rb'))
+    bip = pickle.load(open(data_path + '/bip_DNA_Meth_gene_exp.pkl', 'rb'))
     bip = torch.tensor(bip, dtype=torch.float32)
     B_wu, B_uw = normalized_adjacency_bipartite(bip)  
     B_wu = torch.tensor(B_wu, dtype=torch.float32)        
@@ -282,14 +273,12 @@ if __name__ == "__main__":
                                 B_uv, B_vw, B_wu)
                 val_loss = criterion(out_val, y_u_val)
 
-            # Early stopping condition: Check if validation loss has improved
             if val_loss < best_val_loss:
                 best_val_loss = val_loss
-                epochs_without_improvement = 0  # Reset the counter
+                epochs_without_improvement = 0  
             else:
                 epochs_without_improvement += 1
 
-            # If no improvement for 'patience' epochs, break the training loop
             if epochs_without_improvement >= patience:
                 print(f"Early stopping at epoch {epoch} due to no improvement in validation loss.")
                 break
@@ -297,7 +286,6 @@ if __name__ == "__main__":
         if epoch % 10 == 0:
             print(f'Epoch {epoch}, Loss: {loss.item():.4f}', f'Val Loss: {val_loss.item():.4f}')
         
-        # Break the outer loop if early stopping condition is met
         if epochs_without_improvement >= patience:
             break
 
@@ -330,12 +318,11 @@ if __name__ == "__main__":
         print("AUPRC: ", auprc)
         print("MCC: ", mcc)
 
-
-    print("\nValidation set metrics...")
     del x_u
     del x_v
     del y_u
     del y_v
+    print("\nValidation set metrics...")
     model.eval()
     with torch.no_grad():
         x_u_val.to(device)
@@ -396,19 +383,3 @@ if __name__ == "__main__":
         print("ROC AUC: ", test_roc_auc)
         print("AUPRC: ", test_auprc)
         print("MCC: ", test_mcc)
-    
-    header = [
-        'num_layers', 'batch_size', 'lr', 'epochs', 'adj_thresh', 'adj_metric', 'hidden_dim', 'bias', 'mp', 'k1', 'k2', 'split_no',
-        'train_acc', 'train_F1', 'train_prec', 'train_recall', 'train_ROC_AUC', 'train_AUPRC', 'train_MCC',
-        'val_acc', 'val_F1', 'val_prec', 'val_recall', 'val_ROC_AUC', 'val_AUPRC', 'val_MCC',
-        'test_acc', 'test_F1', 'test_prec', 'test_recall', 'test_ROC_AUC', 'test_AUPRC', 'test_MCC'
-    ]
-
-    metrics = [
-        num_layers, batch_size, lr, epochs, adj_thresh, adj_metric, hidden_dim, bias, mp, k1, k2, split,
-        acc, f1, precision, recall, roc_auc, auprc, mcc,
-        val_acc, val_f1, val_precision, val_recall, val_roc_auc, val_auprc, val_mcc,
-        test_acc, test_f1, test_precision, test_recall, test_roc_auc, test_auprc, test_mcc
-    ]
-
-    save_data(save_path, metrics, filename=save_filename, header=header)

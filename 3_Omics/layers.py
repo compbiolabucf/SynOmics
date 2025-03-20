@@ -91,7 +91,7 @@ class MoGCNLayer(nn.Module):
         H_uw = torch.matmul(W_w, H_uw)                      # r x n
 
         H_wu = torch.matmul(adjacency_matrix_wu.t(), X_w)   # W -> U
-        H_wu = torch.matmul(W_u, H_wu)                      # p x n      
+        H_wu = torch.matmul(W_u, H_wu)                      # p x n       
 
         X_u = self.k1 * H_vu + self.k2 * H_wu + (1 - self.k1 - self.k2) * H_u
         X_v = self.k1 * H_uv + self.k2 * H_wv + (1 - self.k1 - self.k2) * H_v

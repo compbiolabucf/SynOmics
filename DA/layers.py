@@ -6,22 +6,8 @@ import torch.nn.init as init
 from torch.nn import BatchNorm1d
 
 def dense_to_coo(adjacency_matrix):
-    """
-    Convert a dense adjacency matrix to COO format.
-
-    Parameters:
-    adjacency_matrix (torch.Tensor): A dense tensor representing the adjacency matrix.
-
-    Returns:
-    torch.sparse_coo_tensor: Sparse COO format tensor representing the adjacency matrix.
-    """
-    # Step 1: Get the row and column indices of non-zero elements
     rows, cols = adjacency_matrix.nonzero(as_tuple=True)
-
-    # Step 2: Get the corresponding values (non-zero entries)
     values = adjacency_matrix[rows, cols]
-
-    # Step 3: Create the COO format sparse tensor
     coo_tensor = torch.sparse_coo_tensor(indices=torch.stack([rows, cols]),
                                           values=values,
                                           size=adjacency_matrix.size())
