@@ -15,14 +15,13 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Multi-omics Graph Convolutional Network')
     parser.add_argument('--num_layers', type=int, default=2, help='Number of layers')
     parser.add_argument('--batch_size', type=int, default=32, help='Batch size')
-    parser.add_argument('--epochs', type=int, default=100, help='Number of epochs')
-    parser.add_argument('--lr', type=float, default=0.0001, help='Learning rate')
+    parser.add_argument('--epochs', type=int, default=50, help='Number of epochs')
+    parser.add_argument('--lr', type=float, default=0.001, help='Learning rate')
     parser.add_argument('--hidden_dim', type=int, default=64, help='Hidden dimension')
-    parser.add_argument('--adj_thresh', type=float, default=0.5, help='Adjacency threshold')
-    parser.add_argument('--adj_metric', type=str, default='cosine', help='Adjacency metric')
-    parser.add_argument('--bias', type=bool, default=False, help='Bias')
+    parser.add_argument('--adj_thresh', type=float, default=0.1, help='Adjacency threshold')
+    parser.add_argument('--bias', type=bool, default=True, help='Bias')
     parser.add_argument('--k1', type=float, default=0.3, help='Message Passing Weight k1')
-    parser.add_argument('--k2', type=float, default=0.3, help='Message Passing Weight k2')
+    parser.add_argument('--k2', type=float, default=0.4, help='Message Passing Weight k2')
     parser.add_argument('--mRNA_dir', type=str, default='sample_data/mRNA/', help='Direcotry of mRNA data')
     parser.add_argument('--miRNA_dir', type=str, default='sample_data/miRNA/', help='Direcotry of miRNA data')
     parser.add_argument('--DNA_Meth_dir', type=str, default='sample_data/DNA_Meth/', help='Direcotry of DNA_Meth data')
@@ -38,7 +37,6 @@ if __name__ == "__main__":
     lr = args.lr
     hidden_dim = args.hidden_dim
     adj_thresh = args.adj_thresh
-    adj_metric = args.adj_metric
     bias = args.bias
     k1 = args.k1
     k2 = args.k2
