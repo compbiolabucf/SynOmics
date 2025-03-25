@@ -80,7 +80,7 @@ python train.py --<hyper-parameter1>=<value> --<hyper-parameter2>=<value> ...
 ```
 
 ### Extended Model of 3 Omics
-To run the model with 3 omics data on the sample data, run the following command:
+To run the model extended for 3 omics on the sample data, run the following command:
 ```bash
 python 3_Omics/train.py --mRNA_dir=sample_data/mRNA --miRNA_dir=sample_data/miRNA --DNA_Meth_dir=sample_data/DNA_Meth --label_dir=sample_data/labels --bip1_path=sample_data/bip/bip_mRNA_miRNA.pkl --bip2_path=sample_data/bip/bip_miRNA_DNA_Meth.pkl --bip3_path=sample_data/bip/bip_DNA_Meth_mRNA.pkl
 ```
