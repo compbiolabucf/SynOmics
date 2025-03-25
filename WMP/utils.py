@@ -130,17 +130,13 @@ class FocalLoss(nn.Module):
         else:
             return F_loss
 
-def get_data_split(data_path, omics_name='gene_exp', split_no=1):
-    X_train = pickle.load(open(data_path + "/" + omics_name + '_train_' + str(split_no) +'.pkl', 'rb'))
-    y_train = pickle.load(open(data_path + "/" + 'y_train_' + str(split_no) + '.pkl', 'rb'))
+def get_data(data_path):
 
-    X_val = pickle.load(open(data_path + "/" + omics_name + '_val_' + str(split_no) + '.pkl', 'rb'))
-    y_val = pickle.load(open(data_path + "/" + 'y_val_' + str(split_no) + '.pkl', 'rb'))
+    train = pickle.load(open(data_path + "/" + 'train.pkl', 'rb'))
+    val = pickle.load(open(data_path + "/" + 'val.pkl', 'rb'))
+    test = pickle.load(open(data_path + "/" + 'test.pkl', 'rb'))
 
-    X_test = pickle.load(open(data_path + "/" + omics_name + '_test_' + str(split_no) + '.pkl', 'rb'))
-    y_test = pickle.load(open(data_path + "/" + 'y_test_' + str(split_no) + '.pkl', 'rb'))
-
-    return X_train, y_train, X_val, y_val, X_test, y_test
+    return train, val, test
 
 
 def get_best_threshold(fpr, tpr, thresholds, method='Youden'):

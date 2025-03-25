@@ -23,8 +23,13 @@ if __name__ == "__main__":
     parser.add_argument('--bias', type=bool, default=False, help='Bias')
     parser.add_argument('--k1', type=float, default=0.3, help='Message Passing Weight k1')
     parser.add_argument('--k2', type=float, default=0.3, help='Message Passing Weight k2')
-    parser.add_argument('--split', type=int, default=1, help='Number of Split')
-    parser.add_argument('--data_path', type=str, default='sample_data', help='Data Path')
+    parser.add_argument('--mRNA_dir', type=str, default='sample_data/mRNA/', help='Direcotry of mRNA data')
+    parser.add_argument('--miRNA_dir', type=str, default='sample_data/miRNA/', help='Direcotry of miRNA data')
+    parser.add_argument('--DNA_Meth_dir', type=str, default='sample_data/DNA_Meth/', help='Direcotry of DNA_Meth data')
+    parser.add_argument('--label_dir', type=str, default='sample_data/labels/', help='Direcotry of label data')
+    parser.add_argument('--bip1_path', type=str, default='sample_data/bip/bip_mRNA_miRNA.pkl', help='Path of mRNA-miRNA bipartite data')
+    parser.add_argument('--bip2_path', type=str, default='sample_data/bip/bip_miRNA_DNA_Meth.pkl', help='Path of miRNA-DNA_Meth bipartite data')
+    parser.add_argument('--bip3_path', type=str, default='sample_data/bip/bip_DNA_Meth_mRNA.pkl', help='Path of DNA_Meth-mRNA bipartite data')
     args = parser.parse_args()
 
     num_layers = args.num_layers
@@ -37,179 +42,153 @@ if __name__ == "__main__":
     bias = args.bias
     k1 = args.k1
     k2 = args.k2
-    split = args.split
-    data_path = args.data_path
+    mRNA_dir = args.mRNA_dir
+    miRNA_dir = args.miRNA_dir
+    DNA_Meth_dir = args.DNA_Meth_dir
+    label_dir = args.label_dir
+    bip1_path = args.bip1_path
+    bip2_path = args.bip2_path
+    bip3_path = args.bip3_path
 
     # Check if GPU is available
     device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
 
     # --------------------------------- X_u Preparation --------------------------------- #
-    x_u, y_u, x_u_val, y_u_val, x_u_test, y_u_test = get_data_split(data_path, 'gene_exp', split)
+    x_u, x_u_val, x_u_test = get_data(mRNA_dir)
     x_u = torch.tensor(x_u, dtype=torch.float32)
-    y_u = torch.tensor(y_u, dtype=torch.float32)
     x_u_val = torch.tensor(x_u_val, dtype=torch.float32)
-    y_u_val = torch.tensor(y_u_val, dtype=torch.float32)
     x_u_test = torch.tensor(x_u_test, dtype=torch.float32)
-    y_u_test = torch.tensor(y_u_test, dtype=torch.float32)
 
     scaler = StandardScaler()
-    # scaler = MinMaxScaler()
     x_u = scaler.fit_transform(x_u)
-    y_u = y_u.view(-1, 1)
     x_u = torch.tensor(x_u, dtype=torch.float32)
-    y_u = torch.tensor(y_u, dtype=torch.float32)
 
     scaler = StandardScaler()
-    # scaler = MinMaxScaler()
     x_u_val = scaler.fit_transform(x_u_val)
-    y_u_val = y_u_val.view(-1, 1)
     x_u_val = torch.tensor(x_u_val, dtype=torch.float32)
-    y_u_val = torch.tensor(y_u_val, dtype=torch.float32)
 
     scaler = StandardScaler()
-    # scaler = MinMaxScaler()
     x_u_test = scaler.fit_transform(x_u_test)
-    y_u_test = y_u_test.view(-1, 1)
     x_u_test = torch.tensor(x_u_test, dtype=torch.float32)
-    y_u_test = torch.tensor(y_u_test, dtype=torch.float32)
 
-    x_u = x_u.t()               # p x n1
-    x_u_val = x_u_val.t()       # p x n2
-    x_u_test = x_u_test.t()     # p x n3
+    x_u = x_u.t()               
+    x_u_val = x_u_val.t()       
+    x_u_test = x_u_test.t()     
     
-    A_u = get_adjacency_matrix(x_u, threshold=adj_thresh, metric=adj_metric)
+    A_u = get_adjacency_matrix(x_u, threshold=adj_thresh, metric='cosine')
     A_u = torch.tensor(A_u, dtype=torch.float32)
     A_u = A_u + torch.eye(A_u.size(0), device=A_u.device)
     degree_matrix = torch.diag(torch.sum(A_u, dim=1))
     degree_matrix_inv_sqrt = torch.pow(degree_matrix, -0.5)
     degree_matrix_inv_sqrt[torch.isinf(degree_matrix_inv_sqrt)] = 0. # handle division by zero
-    A_u = torch.matmul(torch.matmul(degree_matrix_inv_sqrt, A_u), degree_matrix_inv_sqrt)       # p x p
+    A_u = torch.matmul(torch.matmul(degree_matrix_inv_sqrt, A_u), degree_matrix_inv_sqrt)       # n x n
 
     # Move data to GPU
     x_u = x_u.to(device)
-    y_u = y_u.to(device)
     x_u_val = x_u_val.to(device)
-    y_u_val = y_u_val.to(device)
     x_u_test = x_u_test.to(device)
-    y_u_test = y_u_test.to(device)
 
     # --------------------------------- X_v Preparation --------------------------------- #
-    x_v, y_v, x_v_val, y_v_val, x_v_test, y_v_test = get_data_split(data_path, 'miRNA', split)
+    x_v, x_v_val, x_v_test = get_data(miRNA_dir)
     x_v = torch.tensor(x_v, dtype=torch.float32)
-    y_v = torch.tensor(y_v, dtype=torch.float32)
     x_v_val = torch.tensor(x_v_val, dtype=torch.float32)
-    y_v_val = torch.tensor(y_v_val, dtype=torch.float32)
     x_v_test = torch.tensor(x_v_test, dtype=torch.float32)
-    y_v_test = torch.tensor(y_v_test, dtype=torch.float32)
 
     scaler = StandardScaler()
-    # scaler = MinMaxScaler()
     x_v = scaler.fit_transform(x_v)
-    y_v = y_v.view(-1, 1)
     x_v = torch.tensor(x_v, dtype=torch.float32)
-    y_v = torch.tensor(y_v, dtype=torch.float32)
-
-    scaler = StandardScaler()
-    # scaler = MinMaxScaler()
-    x_v_val = scaler.fit_transform(x_v_val)
-    y_v_val = y_v_val.view(-1, 1)
-    x_v_val = torch.tensor(x_v_val, dtype=torch.float32)
-    y_v_val = torch.tensor(y_v_val, dtype=torch.float32)
-
-    scaler = StandardScaler()
-    # scaler = MinMaxScaler()
-    x_v_test = scaler.fit_transform(x_v_test)
-    y_v_test = y_v_test.view(-1, 1)
-    x_v_test = torch.tensor(x_v_test, dtype=torch.float32)
-    y_v_test = torch.tensor(y_v_test, dtype=torch.float32)
-
-    x_v = x_v.t()               # q x n1
-    x_v_val = x_v_val.t()       # q x n2
-    x_v_test = x_v_test.t()     # q x n3
     
-    A_v = get_adjacency_matrix(x_v, threshold=adj_thresh, metric=adj_metric)
+    scaler = StandardScaler()
+    x_v_val = scaler.fit_transform(x_v_val)
+    x_v_val = torch.tensor(x_v_val, dtype=torch.float32)
+
+    scaler = StandardScaler()
+    x_v_test = scaler.fit_transform(x_v_test)
+    x_v_test = torch.tensor(x_v_test, dtype=torch.float32)
+
+    x_v = x_v.t()               
+    x_v_val = x_v_val.t()       
+    x_v_test = x_v_test.t()     
+    
+    A_v = get_adjacency_matrix(x_v, threshold=adj_thresh)
     A_v = torch.tensor(A_v, dtype=torch.float32)
     A_v = A_v + torch.eye(A_v.size(0), device=A_v.device)
     degree_matrix = torch.diag(torch.sum(A_v, dim=1))
     degree_matrix_inv_sqrt = torch.pow(degree_matrix, -0.5)
     degree_matrix_inv_sqrt[torch.isinf(degree_matrix_inv_sqrt)] = 0. # handle division by zero
-    A_v = torch.matmul(torch.matmul(degree_matrix_inv_sqrt, A_v), degree_matrix_inv_sqrt)       # q x q
+    A_v = torch.matmul(torch.matmul(degree_matrix_inv_sqrt, A_v), degree_matrix_inv_sqrt)       # m x m
 
     # Move data to GPU
     x_v = x_v.to(device)
-    y_v = y_v.to(device)
-    x_v_val = x_v_val.to(device)
-    y_v_val = y_v_val.to(device)
+    x_v_val = x_v_val.to(device)   
     x_v_test = x_v_test.to(device)
-    y_v_test = y_v_test.to(device)
 
     # --------------------------------- X_w Preparation --------------------------------- #
-    x_w, y_w, x_w_val, y_w_val, x_w_test, y_w_test = get_data_split(data_path, 'DNA_Meth', split)
+    x_w, x_w_val, x_w_test = get_data(DNA_Meth_dir)
     x_w = torch.tensor(x_w, dtype=torch.float32)
-    y_w = torch.tensor(y_w, dtype=torch.float32)
     x_w_val = torch.tensor(x_w_val, dtype=torch.float32)
-    y_w_val = torch.tensor(y_w_val, dtype=torch.float32)
     x_w_test = torch.tensor(x_w_test, dtype=torch.float32)
-    y_w_test = torch.tensor(y_w_test, dtype=torch.float32)
 
     scaler = StandardScaler()
-    # scaler = MinMaxScaler()
     x_w = scaler.fit_transform(x_w)
-    y_w = y_w.view(-1, 1)
     x_w = torch.tensor(x_w, dtype=torch.float32)
-    y_w = torch.tensor(y_w, dtype=torch.float32)
-
-    scaler = StandardScaler()
-    # scaler = MinMaxScaler()
-    x_w_val = scaler.fit_transform(x_w_val)
-    y_w_val = y_w_val.view(-1, 1)
-    x_w_val = torch.tensor(x_w_val, dtype=torch.float32)
-    y_w_val = torch.tensor(y_w_val, dtype=torch.float32)
-
-    scaler = StandardScaler()
-    # scaler = MinMaxScaler()
-    x_w_test = scaler.fit_transform(x_w_test)
-    y_w_test = y_w_test.view(-1, 1)
-    x_w_test = torch.tensor(x_w_test, dtype=torch.float32)
-    y_w_test = torch.tensor(y_w_test, dtype=torch.float32)
-
-    x_w = x_w.t()               # r x n
-    x_w_val = x_w_val.t()       # r x n
-    x_w_test = x_w_test.t()     # r x n
     
-    A_w = get_adjacency_matrix(x_w, threshold=adj_thresh, metric=adj_metric)
+    scaler = StandardScaler()
+    x_w_val = scaler.fit_transform(x_w_val)
+    x_w_val = torch.tensor(x_w_val, dtype=torch.float32)
+
+    scaler = StandardScaler()
+    x_w_test = scaler.fit_transform(x_w_test)
+    x_w_test = torch.tensor(x_w_test, dtype=torch.float32)
+
+    x_w = x_w.t()               
+    x_w_val = x_w_val.t()       
+    x_w_test = x_w_test.t()     
+    
+    A_w = get_adjacency_matrix(x_w, threshold=adj_thresh)
     A_w = torch.tensor(A_w, dtype=torch.float32)
     A_w = A_w + torch.eye(A_w.size(0), device=A_w.device)
     degree_matrix = torch.diag(torch.sum(A_w, dim=1))
     degree_matrix_inv_sqrt = torch.pow(degree_matrix, -0.5)
     degree_matrix_inv_sqrt[torch.isinf(degree_matrix_inv_sqrt)] = 0. # handle division by zero
-    A_w = torch.matmul(torch.matmul(degree_matrix_inv_sqrt, A_w), degree_matrix_inv_sqrt)       # r x r
+    A_w = torch.matmul(torch.matmul(degree_matrix_inv_sqrt, A_w), degree_matrix_inv_sqrt)       # m x m
 
     # Move data to GPU
     x_w = x_w.to(device)
-    y_w = y_w.to(device)
-    x_w_val = x_w_val.to(device)
-    y_w_val = y_w_val.to(device)
+    x_w_val = x_w_val.to(device)   
     x_w_test = x_w_test.to(device)
-    y_w_test = y_w_test.to(device)
+
+    # --------------------------------- Y Preparation --------------------------------- #
+    y, y_val, y_test = get_data(label_dir)
+    y = torch.tensor(y, dtype=torch.float32)
+    y_val = torch.tensor(y_val, dtype=torch.float32)
+    y_test = torch.tensor(y_test, dtype=torch.float32)
+    y = y.view(-1, 1)
+    y_val = y_val.view(-1, 1)
+    y_test = y_test.view(-1, 1)
+
+    # Move data to GPU
+    y = y.to(device)
+    y_val = y_val.to(device)
+    y_test = y_test.to(device)
 
     # ---------------------------------------------------------------------------------- #
 
     # bipartite adjacency matrix
-    bip = pickle.load(open(data_path + '/bip_gene_exp_miRNA.pkl', 'rb'))
+    bip = pickle.load(open(bip1_path, 'rb'))
     bip = torch.tensor(bip, dtype=torch.float32)
     B_uv, B_vu = normalized_adjacency_bipartite(bip)  
     B_uv = torch.tensor(B_uv, dtype=torch.float32)        
     B_vu = torch.tensor(B_vu, dtype=torch.float32)
 
-    bip = pickle.load(open(data_path + '/bip_miRNA_DNA_Meth.pkl', 'rb'))
+    bip = pickle.load(open(bip2_path, 'rb'))
     bip = torch.tensor(bip, dtype=torch.float32)
     B_vw, B_wv = normalized_adjacency_bipartite(bip)  
     B_vw = torch.tensor(B_vw, dtype=torch.float32)        
     B_wv = torch.tensor(B_wv, dtype=torch.float32)
 
-    bip = pickle.load(open(data_path + '/bip_DNA_Meth_gene_exp.pkl', 'rb'))
+    bip = pickle.load(open(bip3_path, 'rb'))
     bip = torch.tensor(bip, dtype=torch.float32)
     B_wu, B_uw = normalized_adjacency_bipartite(bip)  
     B_wu = torch.tensor(B_wu, dtype=torch.float32)        
@@ -239,7 +218,7 @@ if __name__ == "__main__":
                   num_layers=num_layers, hidden_dim=hidden_dim, bias=bias, k1=k1, k2=k2).to(device)
 
     # training the model end to end
-    data = Data(x_u=x_u, x_v=x_v, x_w=x_w, y=y_u).to(device)
+    data = Data(x_u=x_u, x_v=x_v, x_w=x_w, y=y).to(device)
     loader = DataLoader([data], batch_size=batch_size, shuffle=True)
     optimizer = optim.Adam(model.parameters(), lr=lr)
     criterion = nn.BCELoss()
@@ -271,7 +250,7 @@ if __name__ == "__main__":
                 out_val = model(x_u_val, x_v_val, x_w_val,
                                 A_u, A_v, A_w,
                                 B_uv, B_vw, B_wu)
-                val_loss = criterion(out_val, y_u_val)
+                val_loss = criterion(out_val, y_val)
 
             if val_loss < best_val_loss:
                 best_val_loss = val_loss
@@ -318,30 +297,26 @@ if __name__ == "__main__":
         print("AUPRC: ", auprc)
         print("MCC: ", mcc)
 
-    del x_u
-    del x_v
-    del y_u
-    del y_v
     print("\nValidation set metrics...")
     model.eval()
     with torch.no_grad():
         x_u_val.to(device)
-        y_u_val = y_u_val.cpu().numpy()
+        y_val = y_val.cpu().numpy()
         output = model(x_u_val, x_v_val, x_w_val,
                        A_u, A_v, A_w,
                        B_uv, B_vw, B_wu)
         output = output.cpu()
-        fpr, tpr, thresholds = precision_recall_curve(y_u_val, output, pos_label=1)
+        fpr, tpr, thresholds = precision_recall_curve(y_val, output, pos_label=1)
         val_auprc = auc(tpr, fpr)
-        fpr, tpr, thresholds = roc_curve(y_u_val, output, pos_label=1)
+        fpr, tpr, thresholds = roc_curve(y_val, output, pos_label=1)
         val_roc_auc = auc(fpr, tpr)
         best_threshold = get_best_threshold(fpr, tpr, thresholds)
         output = (output > best_threshold).float()
-        val_acc = accuracy_score(y_u_val, output)
-        val_f1 = f1_score(y_u_val, output)
-        val_precision = precision_score(y_u_val, output)
-        val_recall = recall_score(y_u_val, output)
-        val_mcc = matthews_corrcoef(y_u_val, output)
+        val_acc = accuracy_score(y_val, output)
+        val_f1 = f1_score(y_val, output)
+        val_precision = precision_score(y_val, output)
+        val_recall = recall_score(y_val, output)
+        val_mcc = matthews_corrcoef(y_val, output)
 
         print("Accuracy: ", val_acc)
         print("F1 Score: ", val_f1)
@@ -352,10 +327,6 @@ if __name__ == "__main__":
         print("MCC: ", val_mcc)
 
     # Testing
-    del x_u_val
-    del x_v_val
-    del y_u_val
-    del y_v_val
     model.eval()
     print("\nTesting set metrics...")
     with torch.no_grad():
@@ -364,17 +335,17 @@ if __name__ == "__main__":
                         A_u, A_v, A_w,
                         B_uv, B_vw, B_wu)
         output = output.cpu()
-        fpr, tpr, thresholds = precision_recall_curve(y_u_test.cpu(), output, pos_label=1)
+        fpr, tpr, thresholds = precision_recall_curve(y_test.cpu(), output, pos_label=1)
         test_auprc = auc(tpr, fpr)
-        fpr, tpr, thresholds = roc_curve(y_u_test.cpu(), output, pos_label=1)
+        fpr, tpr, thresholds = roc_curve(y_test.cpu(), output, pos_label=1)
         test_roc_auc = auc(fpr, tpr)
         best_threshold = get_best_threshold(fpr, tpr, thresholds)
         output = (output > best_threshold).float()
-        test_acc = accuracy_score(y_u_test.cpu(), output)
-        test_f1 = f1_score(y_u_test.cpu(), output)
-        test_precision = precision_score(y_u_test.cpu(), output)
-        test_recall = recall_score(y_u_test.cpu(), output)
-        test_mcc = matthews_corrcoef(y_u_test.cpu(), output)
+        test_acc = accuracy_score(y_test.cpu(), output)
+        test_f1 = f1_score(y_test.cpu(), output)
+        test_precision = precision_score(y_test.cpu(), output)
+        test_recall = recall_score(y_test.cpu(), output)
+        test_mcc = matthews_corrcoef(y_test.cpu(), output)
         
         print("Accuracy: ", test_acc)
         print("F1 Score: ", test_f1)

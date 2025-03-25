@@ -21,8 +21,10 @@ if __name__ == "__main__":
     parser.add_argument('--adj_thresh', type=float, default=0.5, help='Adjacency threshold')
     parser.add_argument('--bias', type=bool, default=False, help='Bias')
     parser.add_argument('--k', type=float, default=0.5, help='Message Passing Weight')
-    parser.add_argument('--split', type=int, default=1, help='Number of Split')
-    parser.add_argument('--data_path', type=str, default='sample_data/', help='Data Path')
+    parser.add_argument('--mRNA_dir', type=str, default='sample_data/mRNA/', help='Direcotry of mRNA data')
+    parser.add_argument('--miRNA_dir', type=str, default='sample_data/miRNA/', help='Direcotry of miRNA data')
+    parser.add_argument('--label_dir', type=str, default='sample_data/labels/', help='Direcotry of label data')
+    parser.add_argument('--bip_path', type=str, default='sample_data/bip/bip_mRNA_miRNA.pkl', help='Path of bipartite data')
     args = parser.parse_args()
 
     num_layers = args.num_layers
@@ -33,46 +35,36 @@ if __name__ == "__main__":
     adj_thresh = args.adj_thresh
     bias = args.bias
     k = args.k
-    split = args.split
-    data_path = args.data_path
+    mRNA_dir = args.mRNA_dir
+    miRNA_dir = args.miRNA_dir
+    label_dir = args.label_dir
+    bip_path = args.bip_path
 
     # Check if GPU is available
     device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
 
     # --------------------------------- X_u Preparation --------------------------------- #
-    x_u, y_u, x_u_val, y_u_val, x_u_test, y_u_test = get_data_split(data_path, 'gene_exp', split)
+    x_u, x_u_val, x_u_test = get_data(mRNA_dir)
     x_u = torch.tensor(x_u, dtype=torch.float32)
-    y_u = torch.tensor(y_u, dtype=torch.float32)
     x_u_val = torch.tensor(x_u_val, dtype=torch.float32)
-    y_u_val = torch.tensor(y_u_val, dtype=torch.float32)
     x_u_test = torch.tensor(x_u_test, dtype=torch.float32)
-    y_u_test = torch.tensor(y_u_test, dtype=torch.float32)
 
     scaler = StandardScaler()
-    # scaler = MinMaxScaler()
     x_u = scaler.fit_transform(x_u)
-    y_u = y_u.view(-1, 1)
     x_u = torch.tensor(x_u, dtype=torch.float32)
-    y_u = torch.tensor(y_u, dtype=torch.float32)
 
     scaler = StandardScaler()
-    # scaler = MinMaxScaler()
     x_u_val = scaler.fit_transform(x_u_val)
-    y_u_val = y_u_val.view(-1, 1)
     x_u_val = torch.tensor(x_u_val, dtype=torch.float32)
-    y_u_val = torch.tensor(y_u_val, dtype=torch.float32)
 
     scaler = StandardScaler()
-    # scaler = MinMaxScaler()
     x_u_test = scaler.fit_transform(x_u_test)
-    y_u_test = y_u_test.view(-1, 1)
     x_u_test = torch.tensor(x_u_test, dtype=torch.float32)
-    y_u_test = torch.tensor(y_u_test, dtype=torch.float32)
 
-    x_u = x_u.t()               # n x d1
-    x_u_val = x_u_val.t()       # n x d2
-    x_u_test = x_u_test.t()     # n x d3
+    x_u = x_u.t()               
+    x_u_val = x_u_val.t()       
+    x_u_test = x_u_test.t()     
     
     A_u = get_adjacency_matrix(x_u, threshold=adj_thresh, metric='cosine')
     A_u = torch.tensor(A_u, dtype=torch.float32)
@@ -84,45 +76,30 @@ if __name__ == "__main__":
 
     # Move data to GPU
     x_u = x_u.to(device)
-    y_u = y_u.to(device)
     x_u_val = x_u_val.to(device)
-    y_u_val = y_u_val.to(device)
     x_u_test = x_u_test.to(device)
-    y_u_test = y_u_test.to(device)
 
     # --------------------------------- X_v Preparation --------------------------------- #
-    x_v, y_v, x_v_val, y_v_val, x_v_test, y_v_test = get_data_split(data_path, 'miRNA', split)
+    x_v, x_v_val, x_v_test = get_data(miRNA_dir)
     x_v = torch.tensor(x_v, dtype=torch.float32)
-    y_v = torch.tensor(y_v, dtype=torch.float32)
     x_v_val = torch.tensor(x_v_val, dtype=torch.float32)
-    y_v_val = torch.tensor(y_v_val, dtype=torch.float32)
     x_v_test = torch.tensor(x_v_test, dtype=torch.float32)
-    y_v_test = torch.tensor(y_v_test, dtype=torch.float32)
 
     scaler = StandardScaler()
-    # scaler = MinMaxScaler()
     x_v = scaler.fit_transform(x_v)
-    y_v = y_v.view(-1, 1)
     x_v = torch.tensor(x_v, dtype=torch.float32)
-    y_v = torch.tensor(y_v, dtype=torch.float32)
-
+    
     scaler = StandardScaler()
-    # scaler = MinMaxScaler()
     x_v_val = scaler.fit_transform(x_v_val)
-    y_v_val = y_v_val.view(-1, 1)
     x_v_val = torch.tensor(x_v_val, dtype=torch.float32)
-    y_v_val = torch.tensor(y_v_val, dtype=torch.float32)
 
     scaler = StandardScaler()
-    # scaler = MinMaxScaler()
     x_v_test = scaler.fit_transform(x_v_test)
-    y_v_test = y_v_test.view(-1, 1)
     x_v_test = torch.tensor(x_v_test, dtype=torch.float32)
-    y_v_test = torch.tensor(y_v_test, dtype=torch.float32)
 
-    x_v = x_v.t()               # m x d1
-    x_v_val = x_v_val.t()       # m x d2
-    x_v_test = x_v_test.t()     # m x d3
+    x_v = x_v.t()               
+    x_v_val = x_v_val.t()       
+    x_v_test = x_v_test.t()     
     
     A_v = get_adjacency_matrix(x_v, threshold=adj_thresh)
     A_v = torch.tensor(A_v, dtype=torch.float32)
@@ -134,14 +111,25 @@ if __name__ == "__main__":
 
     # Move data to GPU
     x_v = x_v.to(device)
-    y_v = y_v.to(device)
-    x_v_val = x_v_val.to(device)
-    y_v_val = y_v_val.to(device)
+    x_v_val = x_v_val.to(device)   
     x_v_test = x_v_test.to(device)
-    y_v_test = y_v_test.to(device)
+
+    # --------------------------------- Y Preparation --------------------------------- #
+    y, y_val, y_test = get_data(label_dir)
+    y = torch.tensor(y, dtype=torch.float32)
+    y_val = torch.tensor(y_val, dtype=torch.float32)
+    y_test = torch.tensor(y_test, dtype=torch.float32)
+    y = y.view(-1, 1)
+    y_val = y_val.view(-1, 1)
+    y_test = y_test.view(-1, 1)
+
+    # Move data to GPU
+    y = y.to(device)
+    y_val = y_val.to(device)
+    y_test = y_test.to(device)
 
     # bipartite adjacency matrix
-    bip = pickle.load(open(data_path + '/bip_gene_exp_miRNA.pkl', 'rb'))
+    bip = pickle.load(open(bip_path, 'rb'))
     bip = torch.tensor(bip, dtype=torch.float32)
     B_u, B_v = normalized_adjacency_bipartite(bip)  
     B_u = torch.tensor(B_u, dtype=torch.float32)
@@ -164,7 +152,7 @@ if __name__ == "__main__":
     model = MoGCN(input_features_u=n, input_features_v=m, num_layers=num_layers, hidden_dim=hidden_dim, bias=bias, k=k).to(device)
 
     # training the model end to end
-    data = Data(x_u=x_u, x_v=x_v, y=y_u).to(device)
+    data = Data(x_u=x_u, x_v=x_v, y=y).to(device)
     loader = DataLoader([data], batch_size=batch_size, shuffle=True)
     optimizer = optim.Adam(model.parameters(), lr=lr)
     criterion = nn.BCELoss()
@@ -192,7 +180,7 @@ if __name__ == "__main__":
             model.eval()
             with torch.no_grad():
                 out_val, _, _ = model(x_u_val, x_v_val, A_u, A_v, B_u)
-                val_loss = criterion(out_val, y_u_val)
+                val_loss = criterion(out_val, y_val)
 
             if val_loss < best_val_loss:
                 best_val_loss = val_loss
@@ -237,29 +225,24 @@ if __name__ == "__main__":
         print("AUPRC: ", auprc)
         print("MCC: ", mcc)
 
-
-    del x_u
-    del x_v
-    del y_u
-    del y_v
     print("\nValidation set metrics...")
     model.eval()
     with torch.no_grad():
         x_u_val.to(device)
-        y_u_val = y_u_val.cpu().numpy()
+        y_val = y_val.cpu().numpy()
         output, h_u_val, h_v_val = model(x_u_val, x_v_val, A_u, A_v, B_u)
         output = output.cpu()
-        fpr, tpr, thresholds = precision_recall_curve(y_u_val, output, pos_label=1)
+        fpr, tpr, thresholds = precision_recall_curve(y_val, output, pos_label=1)
         val_auprc = auc(tpr, fpr)
-        fpr, tpr, thresholds = roc_curve(y_u_val, output, pos_label=1)
+        fpr, tpr, thresholds = roc_curve(y_val, output, pos_label=1)
         val_roc_auc = auc(fpr, tpr)
         best_threshold = get_best_threshold(fpr, tpr, thresholds)
         output = (output > best_threshold).float()
-        val_acc = accuracy_score(y_u_val, output)
-        val_f1 = f1_score(y_u_val, output)
-        val_precision = precision_score(y_u_val, output)
-        val_recall = recall_score(y_u_val, output)
-        val_mcc = matthews_corrcoef(y_u_val, output)
+        val_acc = accuracy_score(y_val, output)
+        val_f1 = f1_score(y_val, output)
+        val_precision = precision_score(y_val, output)
+        val_recall = recall_score(y_val, output)
+        val_mcc = matthews_corrcoef(y_val, output)
 
         print("Accuracy: ", val_acc)
         print("F1 Score: ", val_f1)
@@ -269,28 +252,23 @@ if __name__ == "__main__":
         print("AUPRC: ", val_auprc)
         print("MCC: ", val_mcc)
 
-    
-    del x_u_val
-    del x_v_val
-    del y_u_val
-    del y_v_val
     model.eval()
     print("\nTesting set metrics...")
     with torch.no_grad():
         x_u_test.to(device)
         output, h_u_test, h_v_test = model(x_u_test, x_v_test, A_u, A_v, B_u)
         output = output.cpu()
-        fpr, tpr, thresholds = precision_recall_curve(y_u_test.cpu(), output, pos_label=1)
+        fpr, tpr, thresholds = precision_recall_curve(y_test.cpu(), output, pos_label=1)
         test_auprc = auc(tpr, fpr)
-        fpr, tpr, thresholds = roc_curve(y_u_test.cpu(), output, pos_label=1)
+        fpr, tpr, thresholds = roc_curve(y_test.cpu(), output, pos_label=1)
         test_roc_auc = auc(fpr, tpr)
         best_threshold = get_best_threshold(fpr, tpr, thresholds)
         output = (output > best_threshold).float()
-        test_acc = accuracy_score(y_u_test.cpu(), output)
-        test_f1 = f1_score(y_u_test.cpu(), output)
-        test_precision = precision_score(y_u_test.cpu(), output)
-        test_recall = recall_score(y_u_test.cpu(), output)
-        test_mcc = matthews_corrcoef(y_u_test.cpu(), output)
+        test_acc = accuracy_score(y_test.cpu(), output)
+        test_f1 = f1_score(y_test.cpu(), output)
+        test_precision = precision_score(y_test.cpu(), output)
+        test_recall = recall_score(y_test.cpu(), output)
+        test_mcc = matthews_corrcoef(y_test.cpu(), output)
         
         print("Accuracy: ", test_acc)
         print("F1 Score: ", test_f1)
