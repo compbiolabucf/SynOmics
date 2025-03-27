@@ -24,7 +24,7 @@ if __name__ == "__main__":
     parser.add_argument('--mRNA_dir', type=str, default='sample_data/mRNA/', help='Direcotry of mRNA data')
     parser.add_argument('--miRNA_dir', type=str, default='sample_data/miRNA/', help='Direcotry of miRNA data')
     parser.add_argument('--label_dir', type=str, default='sample_data/labels/', help='Direcotry of label data')
-    parser.add_argument('--bip_path', type=str, default='sample_data/bip/bip_mRNA_miRNA.pkl', help='Path of bipartite data')
+    parser.add_argument('--bip_path', type=str, default='sample_data/bip/bip_mRNA_miRNA.csv', help='Path of bipartite data')
     args = parser.parse_args()
 
     num_layers = args.num_layers
@@ -129,7 +129,7 @@ if __name__ == "__main__":
     y_test = y_test.to(device)
 
     # bipartite adjacency matrix
-    bip = pickle.load(open(bip_path, 'rb'))
+    bip = pd.read_csv(bip_path, index_col=0, header=0).values
     bip = torch.tensor(bip, dtype=torch.float32)
     B_u, B_v = normalized_adjacency_bipartite(bip)  
     B_u = torch.tensor(B_u, dtype=torch.float32)

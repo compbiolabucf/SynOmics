@@ -7,7 +7,7 @@ from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_sc
 from sklearn.preprocessing import StandardScaler
 from model import MoGCN
 import argparse
-import pickle
+import pandas as pd
 
 if __name__ == "__main__":
 
@@ -26,9 +26,9 @@ if __name__ == "__main__":
     parser.add_argument('--miRNA_dir', type=str, default='sample_data/miRNA/', help='Direcotry of miRNA data')
     parser.add_argument('--DNA_Meth_dir', type=str, default='sample_data/DNA_Meth/', help='Direcotry of DNA_Meth data')
     parser.add_argument('--label_dir', type=str, default='sample_data/labels/', help='Direcotry of label data')
-    parser.add_argument('--bip1_path', type=str, default='sample_data/bip/bip_mRNA_miRNA.pkl', help='Path of mRNA-miRNA bipartite data')
-    parser.add_argument('--bip2_path', type=str, default='sample_data/bip/bip_miRNA_DNA_Meth.pkl', help='Path of miRNA-DNA_Meth bipartite data')
-    parser.add_argument('--bip3_path', type=str, default='sample_data/bip/bip_DNA_Meth_mRNA.pkl', help='Path of DNA_Meth-mRNA bipartite data')
+    parser.add_argument('--bip12_path', type=str, default='sample_data/bip/bip_mRNA_miRNA.csv', help='Path of mRNA-miRNA bipartite data')
+    parser.add_argument('--bip23_path', type=str, default='sample_data/bip/bip_miRNA_DNA_Meth.csv', help='Path of miRNA-DNA_Meth bipartite data')
+    parser.add_argument('--bip31_path', type=str, default='sample_data/bip/bip_DNA_Meth_mRNA.csv', help='Path of DNA_Meth-mRNA bipartite data')
     args = parser.parse_args()
 
     num_layers = args.num_layers
@@ -44,9 +44,9 @@ if __name__ == "__main__":
     miRNA_dir = args.miRNA_dir
     DNA_Meth_dir = args.DNA_Meth_dir
     label_dir = args.label_dir
-    bip1_path = args.bip1_path
-    bip2_path = args.bip2_path
-    bip3_path = args.bip3_path
+    bip12_path = args.bip12_path
+    bip23_path = args.bip23_path
+    bip31_path = args.bip31_path
 
     # Check if GPU is available
     device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
@@ -174,19 +174,19 @@ if __name__ == "__main__":
     # ---------------------------------------------------------------------------------- #
 
     # bipartite adjacency matrix
-    bip = pickle.load(open(bip1_path, 'rb'))
+    bip = pd.read_csv(bip12_path, index_col=0, header=0).values
     bip = torch.tensor(bip, dtype=torch.float32)
     B_uv, B_vu = normalized_adjacency_bipartite(bip)  
     B_uv = torch.tensor(B_uv, dtype=torch.float32)        
     B_vu = torch.tensor(B_vu, dtype=torch.float32)
 
-    bip = pickle.load(open(bip2_path, 'rb'))
+    bip = pd.read_csv(bip23_path, index_col=0, header=0).values
     bip = torch.tensor(bip, dtype=torch.float32)
     B_vw, B_wv = normalized_adjacency_bipartite(bip)  
     B_vw = torch.tensor(B_vw, dtype=torch.float32)        
     B_wv = torch.tensor(B_wv, dtype=torch.float32)
 
-    bip = pickle.load(open(bip3_path, 'rb'))
+    bip = pd.read_csv(bip31_path, index_col=0, header=0).values
     bip = torch.tensor(bip, dtype=torch.float32)
     B_wu, B_uw = normalized_adjacency_bipartite(bip)  
     B_wu = torch.tensor(B_wu, dtype=torch.float32)        

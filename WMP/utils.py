@@ -132,9 +132,13 @@ class FocalLoss(nn.Module):
 
 def get_data(data_path):
 
-    train = pickle.load(open(data_path + "/" + 'train.pkl', 'rb'))
-    val = pickle.load(open(data_path + "/" + 'val.pkl', 'rb'))
-    test = pickle.load(open(data_path + "/" + 'test.pkl', 'rb'))
+    train = pd.read_csv(data_path + "/" + 'train.csv', index_col=0)
+    val = pd.read_csv(data_path + "/" + 'val.csv', index_col=0)
+    test = pd.read_csv(data_path + "/" + 'test.csv', index_col=0)
+
+    train = train.values
+    val = val.values
+    test = test.values
 
     return train, val, test
 
