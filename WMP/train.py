@@ -4,7 +4,7 @@ import torch.optim as optim
 from torch_geometric.data import Data, DataLoader
 from utils import *
 from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score, roc_curve, precision_recall_curve, auc, matthews_corrcoef
-from sklearn.metrics import confusion_matrix
+from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from model import MoGCN
 import argparse
@@ -22,10 +22,12 @@ if __name__ == "__main__":
     parser.add_argument('--adj_thresh', type=float, default=0.1, help='Adjacency threshold')
     parser.add_argument('--bias', type=bool, default=True, help='Bias')
     parser.add_argument('--k', type=float, default=0.8, help='Message Passing Weight')
-    parser.add_argument('--mRNA_dir', type=str, default='sample_data/mRNA/', help='Direcotry of mRNA data')
-    parser.add_argument('--miRNA_dir', type=str, default='sample_data/miRNA/', help='Direcotry of miRNA data')
-    parser.add_argument('--label_dir', type=str, default='sample_data/labels/', help='Direcotry of label data')
+    parser.add_argument('--mRNA_path', type=str, default='sample_data/mRNA.csv', help='Path of mRNA data')
+    parser.add_argument('--miRNA_path', type=str, default='sample_data/miRNA.csv', help='Path of miRNA data')
+    parser.add_argument('--label_path', type=str, default='sample_data/label.csv', help='Path of label data')
+    parser.add_argument('--label_mask', type=str, default=None, help='Path of label mask data')
     parser.add_argument('--bip_path', type=str, default='sample_data/bip/bip_mRNA_miRNA.csv', help='Path of bipartite data')
+    parser.add_argument('--task', type=str, default='class', help='Task: classification or embedding generation') 
     args = parser.parse_args()
 
     num_layers = args.num_layers
@@ -36,17 +38,55 @@ if __name__ == "__main__":
     adj_thresh = args.adj_thresh
     bias = args.bias
     k = args.k
-    mRNA_dir = args.mRNA_dir
-    miRNA_dir = args.miRNA_dir
-    label_dir = args.label_dir
+    mRNA_path = args.mRNA_path
+    miRNA_path = args.miRNA_path
+    label_path = args.label_path
     bip_path = args.bip_path
+    task = args.task
 
     # Check if GPU is available
     device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
+    # --------------------------------- Label Preparation --------------------------------- #
+    y_orig = pd.read_csv(label_path, index_col=0, header=0)
+
+    if args.label_mask:
+        masks = pd.read_csv(args.label_mask, index_col=0, header=0)
+        y = y_orig.loc[masks['mask']==1]
+        y_val = y_orig.loc[masks['mask']==2]
+        y_test = y_orig.loc[masks['mask']==3]
+    else:
+        y, y_test = train_test_split(y_orig, test_size=0.2, random_state=42, stratify=y_orig)
+        y, y_val = train_test_split(y, test_size=0.2, random_state=42, stratify=y)
+
+    train_samples = y.index
+    val_samples = y_val.index
+    test_samples = y_test.index
+
+    y = y.values
+    y_val = y_val.values
+    y_test = y_test.values
+
+    y = torch.tensor(y, dtype=torch.float32)
+    y_val = torch.tensor(y_val, dtype=torch.float32)
+    y_test = torch.tensor(y_test, dtype=torch.float32)
+    y = y.view(-1, 1)
+    y_val = y_val.view(-1, 1)
+    y_test = y_test.view(-1, 1)
+
+    # Move data to GPU
+    y = y.to(device)
+    y_val = y_val.to(device)
+    y_test = y_test.to(device)
+
 
     # --------------------------------- X_u Preparation --------------------------------- #
-    x_u, x_u_val, x_u_test = get_data(mRNA_dir)
+    x_u_orig = pd.read_csv(mRNA_path, index_col=0, header=0)
+
+    x_u = x_u_orig.loc[train_samples].values
+    x_u_val = x_u_orig.loc[val_samples].values
+    x_u_test = x_u_orig.loc[test_samples].values
+
     x_u = torch.tensor(x_u, dtype=torch.float32)
     x_u_val = torch.tensor(x_u_val, dtype=torch.float32)
     x_u_test = torch.tensor(x_u_test, dtype=torch.float32)
@@ -81,7 +121,12 @@ if __name__ == "__main__":
     x_u_test = x_u_test.to(device)
 
     # --------------------------------- X_v Preparation --------------------------------- #
-    x_v, x_v_val, x_v_test = get_data(miRNA_dir)
+    x_v_orig = pd.read_csv(miRNA_path, index_col=0, header=0)
+
+    x_v = x_v_orig.loc[train_samples].values
+    x_v_val = x_v_orig.loc[val_samples].values
+    x_v_test = x_v_orig.loc[test_samples].values
+
     x_v = torch.tensor(x_v, dtype=torch.float32)
     x_v_val = torch.tensor(x_v_val, dtype=torch.float32)
     x_v_test = torch.tensor(x_v_test, dtype=torch.float32)
@@ -115,19 +160,7 @@ if __name__ == "__main__":
     x_v_val = x_v_val.to(device)   
     x_v_test = x_v_test.to(device)
 
-    # --------------------------------- Y Preparation --------------------------------- #
-    y, y_val, y_test = get_data(label_dir)
-    y = torch.tensor(y, dtype=torch.float32)
-    y_val = torch.tensor(y_val, dtype=torch.float32)
-    y_test = torch.tensor(y_test, dtype=torch.float32)
-    y = y.view(-1, 1)
-    y_val = y_val.view(-1, 1)
-    y_test = y_test.view(-1, 1)
-
-    # Move data to GPU
-    y = y.to(device)
-    y_val = y_val.to(device)
-    y_test = y_test.to(device)
+    # --------------------------------- Bipartite graph Preparation --------------------------------- #
 
     # bipartite adjacency matrix
     bip = pd.read_csv(bip_path, index_col=0, header=0).values
@@ -199,82 +232,88 @@ if __name__ == "__main__":
         if epochs_without_improvement >= patience:
             break
 
+    if task == 'class':
+        # Evaluation
+        print("\nTraining set metrics...")
+        model.eval()
+        with torch.no_grad():
+            preds, h_u_train, h_v_train = model(data.x_u, data.x_v, A_u, A_v, B_u)
+            preds = preds.cpu()
+            fpr, tpr, thresholds = roc_curve(data.y.cpu(), preds, pos_label=1)
+            roc_auc = auc(fpr, tpr)
+            best_threshold = get_best_threshold(fpr, tpr, thresholds)
+            preds = (preds > best_threshold).float()
+            acc = accuracy_score(data.y.cpu(), preds)
+            f1 = f1_score(data.y.cpu(), preds)
+            mcc = matthews_corrcoef(data.y.cpu(), preds)
 
-    # Evaluation
-    print("\nTraining set metrics...")
-    model.eval()
-    with torch.no_grad():
-        preds, h_u_train, h_v_train = model(data.x_u, data.x_v, A_u, A_v, B_u)
-        preds = preds.cpu()  
-        fpr, tpr, thresholds = precision_recall_curve(data.y.cpu(), preds, pos_label=1)
-        auprc = auc(tpr, fpr)
-        fpr, tpr, thresholds = roc_curve(data.y.cpu(), preds, pos_label=1)
-        roc_auc = auc(fpr, tpr)
-        best_threshold = get_best_threshold(fpr, tpr, thresholds)
-        preds = (preds > best_threshold).float()
-        acc = accuracy_score(data.y.cpu(), preds)
-        f1 = f1_score(data.y.cpu(), preds)
-        precision = precision_score(data.y.cpu(), preds)
-        recall = recall_score(data.y.cpu(), preds)
-        mcc = matthews_corrcoef(data.y.cpu(), preds)
+            print(f"Accuracy: {acc:.4f}")
+            print(f"F1: {f1:.4f}")
+            print(f"ROC: {roc_auc:.4f}")
+            print(f"MCC: {mcc:.4f}")
 
-        print("Accuracy: ", acc)
-        print("F1 Score: ", f1)
-        print("Precision: ", precision)
-        print("Recall: ", recall)
-        print("ROC AUC: ", roc_auc)
-        print("AUPRC: ", auprc)
-        print("MCC: ", mcc)
+        print("\nValidation set metrics...")
+        model.eval()
+        with torch.no_grad():
+            x_u_val.to(device)
+            y_val = y_val.cpu().numpy()
+            output, h_u_val, h_v_val = model(x_u_val, x_v_val, A_u, A_v, B_u)
+            output = output.cpu()
+            fpr, tpr, thresholds = roc_curve(y_val, output, pos_label=1)
+            val_roc_auc = auc(fpr, tpr)
+            best_threshold = get_best_threshold(fpr, tpr, thresholds)
+            output = (output > best_threshold).float()
+            val_acc = accuracy_score(y_val, output)
+            val_f1 = f1_score(y_val, output)
+            val_mcc = matthews_corrcoef(y_val, output)
 
-    print("\nValidation set metrics...")
-    model.eval()
-    with torch.no_grad():
-        x_u_val.to(device)
-        y_val = y_val.cpu().numpy()
-        output, h_u_val, h_v_val = model(x_u_val, x_v_val, A_u, A_v, B_u)
-        output = output.cpu()
-        fpr, tpr, thresholds = precision_recall_curve(y_val, output, pos_label=1)
-        val_auprc = auc(tpr, fpr)
-        fpr, tpr, thresholds = roc_curve(y_val, output, pos_label=1)
-        val_roc_auc = auc(fpr, tpr)
-        best_threshold = get_best_threshold(fpr, tpr, thresholds)
-        output = (output > best_threshold).float()
-        val_acc = accuracy_score(y_val, output)
-        val_f1 = f1_score(y_val, output)
-        val_precision = precision_score(y_val, output)
-        val_recall = recall_score(y_val, output)
-        val_mcc = matthews_corrcoef(y_val, output)
+            print(f"Accuracy: {val_acc:.4f}")
+            print(f"F1: {val_f1:.4f}")
+            print(f"ROC: {val_roc_auc:.4f}")
+            print(f"MCC: {val_mcc:.4f}")
 
-        print("Accuracy: ", val_acc)
-        print("F1 Score: ", val_f1)
-        print("Precision: ", val_precision)
-        print("Recall: ", val_recall)
-        print("ROC AUC: ", val_roc_auc)
-        print("AUPRC: ", val_auprc)
-        print("MCC: ", val_mcc)
+        model.eval()
+        print("\nTesting set metrics...")
+        with torch.no_grad():
+            x_u_test.to(device)
+            output, h_u_test, h_v_test = model(x_u_test, x_v_test, A_u, A_v, B_u)
+            output = output.cpu()
+            fpr, tpr, thresholds = roc_curve(y_test.cpu(), output, pos_label=1)
+            test_roc_auc = auc(fpr, tpr)
+            best_threshold = get_best_threshold(fpr, tpr, thresholds)
+            output = (output > best_threshold).float()
+            test_acc = accuracy_score(y_test.cpu(), output)
+            test_f1 = f1_score(y_test.cpu(), output)
+            test_mcc = matthews_corrcoef(y_test.cpu(), output)
+            
+            print(f"Accuracy: {test_acc:.4f}")
+            print(f"F1: {test_f1:.4f}")
+            print(f"ROC: {test_roc_auc:.4f}")
+            print(f"MCC: {test_mcc:.4f}")
 
-    model.eval()
-    print("\nTesting set metrics...")
-    with torch.no_grad():
-        x_u_test.to(device)
-        output, h_u_test, h_v_test = model(x_u_test, x_v_test, A_u, A_v, B_u)
-        output = output.cpu()
-        fpr, tpr, thresholds = precision_recall_curve(y_test.cpu(), output, pos_label=1)
-        test_auprc = auc(tpr, fpr)
-        fpr, tpr, thresholds = roc_curve(y_test.cpu(), output, pos_label=1)
-        test_roc_auc = auc(fpr, tpr)
-        best_threshold = get_best_threshold(fpr, tpr, thresholds)
-        output = (output > best_threshold).float()
-        test_acc = accuracy_score(y_test.cpu(), output)
-        test_f1 = f1_score(y_test.cpu(), output)
-        test_precision = precision_score(y_test.cpu(), output)
-        test_recall = recall_score(y_test.cpu(), output)
-        test_mcc = matthews_corrcoef(y_test.cpu(), output)
+    elif task == 'emb':
+        # Generate embeddings
+        model.eval()
+        with torch.no_grad():
+            _, h_u_train, h_v_train = model(data.x_u, data.x_v, A_u, A_v, B_u)
+            _, h_u_val, h_v_val = model(x_u_val, x_v_val, A_u, A_v, B_u)
+            _, h_u_test, h_v_test = model(x_u_test, x_v_test, A_u, A_v, B_u)
+            h_u_train = h_u_train.cpu().numpy()
+            h_v_train = h_v_train.cpu().numpy()
+            h_u_val = h_u_val.cpu().numpy()
+            h_v_val = h_v_val.cpu().numpy()
+            h_u_test = h_u_test.cpu().numpy()
+            h_v_test = h_v_test.cpu().numpy()
+
+        h_train = np.concatenate([h_u_train, h_v_train], axis=0)
+        h_val = np.concatenate([h_u_val, h_v_val], axis=0)
+        h_test = np.concatenate([h_u_test, h_v_test], axis=0)
         
-        print("Accuracy: ", test_acc)
-        print("F1 Score: ", test_f1)
-        print("Precision: ", test_precision)
-        print("Recall: ", test_recall)
-        print("ROC AUC: ", test_roc_auc)
-        print("AUPRC: ", test_auprc)
-        print("MCC: ", test_mcc)
+        h = np.concatenate([h_train.T, h_val.T, h_test.T], axis=0)
+        np.save('emb/embeddings.npy', h)
+
+        print("Embeddings saved successfully!")
+        print("You can find the embeddings in the 'emb' folder.")
+
+    else:
+        raise ValueError("Task must be either 'class' or 'emb'.")

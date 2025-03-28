@@ -2,11 +2,8 @@ import numpy as np
 import torch
 from sklearn.preprocessing import StandardScaler, MinMaxScaler, RobustScaler, Normalizer
 from sklearn.metrics.pairwise import cosine_similarity
-import pickle
 import torch.nn as nn
 import torch.nn.functional as F
-import pandas as pd
-import os
 
 
 def get_scaler(scaler_name):
@@ -130,18 +127,6 @@ class FocalLoss(nn.Module):
         else:
             return F_loss
 
-def get_data(data_path):
-
-    train = pd.read_csv(data_path + "/" + 'train.csv', index_col=0)
-    val = pd.read_csv(data_path + "/" + 'val.csv', index_col=0)
-    test = pd.read_csv(data_path + "/" + 'test.csv', index_col=0)
-
-    train = train.values
-    val = val.values
-    test = test.values
-
-    return train, val, test
-
 
 def get_best_threshold(fpr, tpr, thresholds, method='Youden'):
     """
@@ -165,16 +150,3 @@ def get_best_threshold(fpr, tpr, thresholds, method='Youden'):
         raise ValueError("Invalid method")
     
     return thresholds[idx]
-
-
-def save_data(path, data, filename='results.csv', header=None):
-    csv_file = path + filename
-    file_exists = os.path.isfile(csv_file)
-
-    with open(csv_file, 'a', newline='') as file:
-        writer = csv.writer(file)
-        if not file_exists:
-            writer.writerow(header)
-        writer.writerow(data)
-
-    print(f'Data written to {csv_file}.')
