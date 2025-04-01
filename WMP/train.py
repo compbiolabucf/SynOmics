@@ -3,10 +3,10 @@ import torch.nn as nn
 import torch.optim as optim
 from torch_geometric.data import Data, DataLoader
 from utils import *
-from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score, roc_curve, precision_recall_curve, auc, matthews_corrcoef
+from sklearn.metrics import accuracy_score, f1_score, roc_curve, auc, matthews_corrcoef
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
-from model import MoGCN
+from model import SynOmics
 import argparse
 import pandas as pd
 
@@ -183,7 +183,7 @@ if __name__ == "__main__":
     d = x_u.size(1)
 
     # Initialize the model
-    model = MoGCN(input_features_u=n, input_features_v=m, num_layers=num_layers, hidden_dim=hidden_dim, bias=bias, k=k).to(device)
+    model = SynOmics(input_features_u=n, input_features_v=m, num_layers=num_layers, hidden_dim=hidden_dim, bias=bias, k=k).to(device)
 
     # training the model end to end
     data = Data(x_u=x_u, x_v=x_v, y=y).to(device)

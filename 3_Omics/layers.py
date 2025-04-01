@@ -31,9 +31,9 @@ class GCNCustomLayer(nn.Module):
         return X                        # p x n
     
 
-class MoGCNLayer(nn.Module):
+class SynOmicsLayer(nn.Module):
     def __init__(self, in_features_u, in_features_v, in_features_w, bias=False, k1=0.3, k2=0.3):
-        super(MoGCNLayer, self).__init__()
+        super(SynOmicsLayer, self).__init__()
         
         self.in_features_u = in_features_u
         self.in_features_v = in_features_v

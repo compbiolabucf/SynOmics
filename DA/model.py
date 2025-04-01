@@ -3,17 +3,17 @@ import torch.nn as nn
 import torch.nn.functional as F
 from utils import *
 
-from layers import MoGCNLayer
+from layers import SynOmicsLayer
 
-class MoGCN(nn.Module):
+class SynOmics(nn.Module):
     def __init__(self, input_features_u, input_features_v, num_layers=2, hidden_dim=64, bias=False, nc=1):
-        super(MoGCN, self).__init__()
+        super(SynOmics, self).__init__()
 
         self.layers = nn.ModuleList()
         self.nc = nc
 
         for i in range(num_layers):
-            self.layers.append(MoGCNLayer(input_features_u, input_features_v, bias))
+            self.layers.append(SynOmicsLayer(input_features_u, input_features_v, bias))
 
         self.fc = nn.Linear(input_features_u + input_features_v, hidden_dim)
         self.fc2 = nn.Linear(hidden_dim, nc)

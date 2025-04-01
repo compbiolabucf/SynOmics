@@ -130,22 +130,6 @@ class FocalLoss(nn.Module):
         else:
             return F_loss
 
-def get_data(data_path):
-
-    # train = pickle.load(open(data_path + "/" + 'train.pkl', 'rb'))
-    # val = pickle.load(open(data_path + "/" + 'val.pkl', 'rb'))
-    # test = pickle.load(open(data_path + "/" + 'test.pkl', 'rb'))
-
-    train = pd.read_csv(data_path + "/" + 'train.csv', index_col=0)
-    val = pd.read_csv(data_path + "/" + 'val.csv', index_col=0)
-    test = pd.read_csv(data_path + "/" + 'test.csv', index_col=0)
-
-    train = train.values
-    val = val.values
-    test = test.values
-
-    return train, val, test
-
 
 def get_best_threshold(fpr, tpr, thresholds, method='Youden'):
     """
@@ -169,16 +153,3 @@ def get_best_threshold(fpr, tpr, thresholds, method='Youden'):
         raise ValueError("Invalid method")
     
     return thresholds[idx]
-
-
-def save_data(path, data, filename='results.csv', header=None):
-    csv_file = path + filename
-    file_exists = os.path.isfile(csv_file)
-
-    with open(csv_file, 'a', newline='') as file:
-        writer = csv.writer(file)
-        if not file_exists:
-            writer.writerow(header)
-        writer.writerow(data)
-
-    print(f'Data written to {csv_file}.')

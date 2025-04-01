@@ -1,27 +1,20 @@
 import torch
 import torch.nn as nn
-import torch.optim as optim
-from torch_geometric.data import Data, DataLoader
-from torch_geometric.nn import GCNConv
 import torch.nn.functional as F
-import pickle
 from utils import *
-from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score, roc_auc_score
-import torch.nn.init as init
-from torch.nn import BatchNorm1d
 
-from layers import GCNCustomLayer, MoGCNLayer
+from layers import SynOmicsLayer
 
-class MoGCN(nn.Module):
+class SynOmics(nn.Module):
     def __init__(self, input_features_u, input_features_v, input_features_w, 
                  num_layers=2, hidden_dim=64, bias=False, k1=0.3, k2=0.3, nc=1):
-        super(MoGCN, self).__init__()
+        super(SynOmics, self).__init__()
 
         self.layers = nn.ModuleList()
         self.nc = nc
         
         for i in range(num_layers):
-            self.layers.append(MoGCNLayer(input_features_u, input_features_v, input_features_w, bias, k1, k2))
+            self.layers.append(SynOmicsLayer(input_features_u, input_features_v, input_features_w, bias, k1, k2))
 
         self.fc = nn.Linear(input_features_u + input_features_v + input_features_w, hidden_dim)
         self.fc2 = nn.Linear(hidden_dim, nc)     
@@ -48,4 +41,4 @@ class MoGCN(nn.Module):
         else:
             x = torch.sigmoid(x)   
 
-        return x
+        return x, x_u, x_v, x_w
